@@ -1,0 +1,11 @@
+<h1>ActionClient::Previews</h1>
+
+<ul>
+  <% clients.each do |client| %>
+    <li>
+      <%= link_to action_client_engine.client_path(client) do %>
+        <%= client.preview_name %>
+      <% end %>
+    </li>
+  <% end %>
+</ul>

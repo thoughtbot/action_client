@@ -1,0 +1,47 @@
+<%= link_to action_client_engine.client_path(client) do %>
+  <%= client.client_name %>
+<% end %>
+
+<h1>
+  <%= client.client_name %>#<%= preview.action_name %>
+</h1>
+
+<h2>
+  cURL
+</h2>
+
+<pre>
+curl \
+  --request <%= preview.request.request_method %> \
+  <% ActionClient::Utils.headers_to_hash(preview.request.headers).each do |key, value| %>
+ --header "<%= key %>: <%= value %>" \
+  <% end %>
+  --data '<%= preview.request.body.read.strip %>' \
+  <%= preview.request.original_url %>
+</pre>
+
+<h2>
+  HTTP Action
+</h2>
+
+<pre id="url">
+<%= preview.request.request_method %> <%= preview.request.original_url %>
+</pre>
+
+<h2>
+  Headers
+</h2>
+
+<pre>
+  <% ActionClient::Utils.headers_to_hash(preview.request.headers).each do |key, value| %>
+<%= key %>: <%= value %>
+  <% end %>
+</pre>
+
+<h2>
+  Body
+</h2>
+
+<pre id="body"><%=
+  JSON.pretty_generate(JSON.parse(preview.request.body.read))
+%></pre>

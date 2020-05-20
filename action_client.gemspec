@@ -9,9 +9,9 @@ Gem::Specification.new do |spec|
   spec.version     = ActionClient::VERSION
   spec.authors     = ["Sean Doyle"]
   spec.email       = ["sean.p.doyle24@gmail.com"]
-  spec.homepage    = "TODO"
-  spec.summary     = "TODO: Summary of ActionClient."
-  spec.description = "TODO: Description of ActionClient."
+  spec.homepage    = "https://github.com/seanpdoyle/action_client"
+  spec.summary     = "HTTP Clients, the Rails way"
+  spec.description = "Write HTTP clients in the style of Controllers and Mailers"
   spec.license     = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
@@ -25,5 +25,5 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
 
-  spec.add_dependency "rails", "~> 6.0.2", ">= 6.0.2.2"
+  spec.add_dependency "rails", "~> 6.0.3", ">= 6.0.3.1"
 end
