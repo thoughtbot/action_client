@@ -14,6 +14,14 @@ gemspec
 # To use a debugger
 # gem 'byebug', group: [:development, :test]
 
+rails_version = ENV.fetch("RAILS_VERSION", "6.0")
+
+if rails_version == "master"
+  rails_constraint = { github: "rails/rails" }
+else
+  rails_constraint = "~> #{rails_version}.0"
+end
+
 group :test do
   gem "minitest-around", require: "minitest/around/unit"
   gem "webmock", require: "webmock/minitest"
