@@ -32,6 +32,32 @@ module ActionClient
             },
           }
         end
+
+        test "#submit sends a GET request" do
+          uri = URI("https://www.example.com/articles")
+          stub_request(:any, Regexp.new(uri.hostname)).and_return(
+            body: %({"responded": true}),
+            status: 200,
+          )
+          adapter = ActionClient::Applications::Net::HttpClient.new
+          request = ActionDispatch::Request.new(
+            Rack::HTTP_HOST => uri.hostname,
+            Rack::PATH_INFO => uri.path,
+            Rack::RACK_URL_SCHEME => uri.scheme,
+            Rack::REQUEST_METHOD => "GET",
+            "CONTENT_TYPE" => "application/json",
+          )
+
+          code, _, body = adapter.call(request.env)
+
+          assert_equal %({"responded": true}), body.each(&:yield_self).sum
+          assert_equal 200, code
+          assert_requested :get, uri, {
+            headers: {
+              "Content-Type" => "application/json",
+            },
+          }
+        end
       end
     end
   end

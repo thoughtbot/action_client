@@ -32,5 +32,11 @@ module ActionClient
       assert_select "#url", text: "\nPOST https://example.com/articles\n"
       assert_select "#body", text: JSON.pretty_generate({ title: "Hello, World" })
     end
+
+    test "action_client/previews omits body when a template is not declared" do
+      get client_preview_path(ArticlesClientPreview.preview_name, "create")
+
+      assert_select "#body", count: 0
+    end
   end
 end

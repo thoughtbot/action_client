@@ -15,6 +15,18 @@ module ActionClient
   end
 
   class RequestsTest < ClientTestCase
+    test "constructs a request that encodes the port" do
+      class ArticleClient < BaseClient
+        def create
+          post url: "https://localhost:3000/articles"
+        end
+      end
+
+      request = ArticleClient.create
+
+      assert_equal "https://localhost:3000/articles", request.url
+    end
+
     test "constructs a POST request with a JSON body declared with instance variables" do
       class ArticleClient < BaseClient
         def create(article:)

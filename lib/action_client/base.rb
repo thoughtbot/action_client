@@ -60,7 +60,7 @@ module ActionClient
       payload = CGI.unescapeHTML(body.to_s)
 
       request = ActionDispatch::Request.new(
-        Rack::HTTP_HOST => uri.hostname,
+        Rack::HTTP_HOST => "#{uri.hostname}:#{uri.port}",
         Rack::PATH_INFO => uri.path,
         Rack::RACK_INPUT => StringIO.new(payload),
         Rack::RACK_URL_SCHEME => uri.scheme,

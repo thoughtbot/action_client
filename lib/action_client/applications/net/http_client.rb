@@ -8,12 +8,25 @@ module ActionClient
           request = ActionDispatch::Request.new(env)
           method = request.request_method.to_s.downcase
 
-          response = ::Net::HTTP.public_send(
-            method,
-            URI(request.original_url),
-            request.body.read,
-            ActionClient::Utils.headers_to_hash(request.headers),
-          )
+          uri = URI(request.original_url)
+          request_class = ::Net::HTTP.const_get(method.camelize)
+          http_request = request_class.new(uri)
+
+          if request.body.present?
+            http_request.body = request.body.read
+          end
+
+          ActionClient::Utils.headers_to_hash(request.headers).each do |key, value|
+            http_request[key] = value
+          end
+
+          response = ::Net::HTTP.start(
+            uri.hostname,
+            uri.port,
+            use_ssl: uri.scheme == "https"
+          ) { |http|
+            http.request(http_request)
+          }
 
           ActionDispatch::Response.new(
             response.code,

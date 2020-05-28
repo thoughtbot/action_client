@@ -42,6 +42,8 @@ curl \
   Body
 </h2>
 
-<pre id="body"><%=
-  JSON.pretty_generate(JSON.parse(preview.request.body.read))
-%></pre>
+<% if preview.request.body.any? %>
+  <pre id="body"><%=
+    JSON.pretty_generate(JSON.parse(preview.request.body.read))
+  %></pre>
+<% end %>
