@@ -13,6 +13,8 @@ Considering a hypothetical scenario where we need to make a [`POST`
 request][mdn-post] to `https://example.com/articles` with a JSON payload of `{
 "title": "Hello, World" }`.
 
+### Declaring the Client
+
 First, declare the `ArticlesClient` as a descendant of `ActionClient::Base`:
 
 ```ruby
@@ -32,6 +34,8 @@ class ArticlesClient < ActionClient::Base
   end
 end
 ```
+
+### Constructing the Request
 
 Our client action will need to make an [HTTP `POST` request][mdn-post] to
 `https://example.com/articles`, so let's declare that call:
@@ -152,7 +156,9 @@ end
 When a key-value pair exists in both the `path:` (or `url:`) option and `query:`
 option, the value present in the URL will be overridden by the `query:` value.
 
-### Configuration
+## Configuration
+
+### Declaring `default` options
 
 Descendants of `ActionClient::Base` can specify some defaults:
 
@@ -160,6 +166,10 @@ Descendants of `ActionClient::Base` can specify some defaults:
 class ArticlesClient < ActionClient::Base
   default url: "https://example.com"
   default headers: { "Content-Type": "application/json" }
+
+  def create(title:)
+    post path: "/articles", locals: { title: title }
+  end
 end
 ```
 
@@ -167,6 +177,148 @@ Default values can be overridden on a request-by-request basis.
 
 When a default `url:` key is specified, a request's full URL will be built by
 joining the base `default url: ...` value with the request's `path:` option.
+
+### Declaring `after_submit` callbacks
+
+When submitting requests from an `ActionClient::Base` descendant, it can be
+useful to modify the response's body before returning the response to the
+caller.
+
+As an example, consider instantiating [`OpenStruct` instances][OpenStruct] from
+each response body by declaring an `after_submit` hook:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit do |status, headers, body|
+    [status, headers, OpenStruct.new(body)]
+  end
+end
+```
+
+When declaring `after_submit` hooks, it's important to make sure that the block
+returns a [`Rack`-compliant triplet][Rack-Response] of `status`, `headers`, and
+`body`.
+
+#### Declaring Request-specific callbacks
+
+To specify a Request-specific callback, pass a [block argument][ruby-block] that
+accepts a `Rack` triplet.
+
+For example, assuming that an `Article` model class exists and accepts
+attributes as a `Hash`, consider constructing an instance from the `body`:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  default url: "https://example.com"
+
+  def create(title:)
+    @title = title
+
+    post path: "/articles" do |status, headers, body|
+      [status, headers, Article.new(body)]
+    end
+  end
+end
+```
+
+Request-level blocks are executed _after_ class-level `after_submit` blocks.
+
+#### Transforming the response's `body`
+
+When your callback is only interested in modifying the `body`, you can declare
+it with a single block argument:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  default url: "https://example.com"
+
+  def create(title:)
+    @title = title
+
+    post path: "/articles" do |body|
+      Article.new(body)
+    end
+  end
+end
+```
+
+[OpenStruct]: https://ruby-doc.org/stdlib-2.7.1/libdoc/ostruct/rdoc/OpenStruct.html
+[Rack-Response]: https://github.com/rack/rack/blob/master/SPEC.rdoc#label-Rack+applications
+[ruby-block]: https://ruby-doc.org/core-2.7.1/doc/syntax/methods_rdoc.html#label-Block+Argument
+
+### Executing `after_submit` for a range of HTTP Status Codes
+
+In some cases, applications might want to raise Errors based on a response's
+[HTTP Status Code][HTTP-codes].
+
+For example, when a response has a [422 HTTP Status][422], the server is
+indicating that there were invalid parameters.
+
+To map that to an application-specific error code, declare an `after_submit`
+that passes a `with_status: 422` as a keyword argument:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit with_status: 422 do |status, headers, body|
+    raise MyApplication::InvalidDataError, body.fetch("error")
+  end
+end
+```
+
+In some cases, there are multiple HTTP Status codes that might map to a similar
+concept. For example, a [401][] and [403][] might correspond to similar concepts
+in your application, and you might want to handle them the same way.
+
+You can pass them to `after_submit with_status:` as either an
+[`Array`][ruby-array] or a [`Range`][ruby-range]:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit with_status: [401, 403] do |status, headers, body|
+    raise MyApplication::SecurityError, body.fetch("error")
+  end
+
+  after_submit with_status: 401..403 do |status, headers, body|
+    raise MyApplication::SecurityError, body.fetch("error")
+  end
+end
+```
+
+If the block is only concerned with the value of the `body`, declare the block
+with a single argument:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit with_status: 422 do |body|
+    raise MyApplication::ArgumentError, body.fetch("error")
+  end
+end
+```
+
+When passing the [HTTP Status Code][HTTP-codes] singularly or as an `Array`,
+`after_submit` will also accept a `Symbol` that corresponds to the [name of the
+Status Code][status-code-name]:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit with_status: :unprocessable_entity do |body|
+    raise MyApplication::ArgumentError, body.fetch("error")
+  end
+
+  after_submit with_status: [:unauthorized, :forbidden] do |body|
+    raise MyApplication::SecurityError, body.fetch("error")
+  end
+end
+```
+
+
+[HTTP-codes]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+[401]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+[403]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+[422]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+[ruby-array]: https://ruby-doc.org/core-2.7.1/Array.html
+[ruby-range]: https://ruby-doc.org/core-2.7.1/Range.html
+[status-code-name]: https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
 
 ### Previews
 

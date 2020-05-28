@@ -9,9 +9,13 @@ module ActionClient
       instance_accessor: true,
       default: ActiveSupport::OrderedOptions.new
 
+    class_attribute :middleware,
+      default: ActionDispatch::MiddlewareStack.new
+
     class << self
       def inherited(descendant)
         descendant.defaults = defaults.dup
+        descendant.middleware = middleware.dup
       end
 
       def default(options)
@@ -20,11 +24,13 @@ module ActionClient
         end
       end
 
+      def after_submit(with_status: nil, &block)
+        middleware.unshift ActionClient::Callbacks::AfterSubmit, with_status, &block
+      end
+
       def method_missing(method_name, *args)
         if action_methods.include?(method_name.to_s)
-          instance = self.new(Rails.configuration.action_client.middleware)
-
-          instance.process(method_name, *args)
+          self.new(middleware).process(method_name, *args)
         else
           super
         end
@@ -36,7 +42,7 @@ module ActionClient
       @middleware = middleware.dup
     end
 
-    def build_request(method:, path: nil, url: nil, query: {}, headers: {}, **options)
+    def build_request(method:, path: nil, url: nil, query: {}, headers: {}, **options, &block)
       if path.present? && url.present?
         raise ArgumentError, "either pass only url:, or only path:"
       end
@@ -87,6 +93,10 @@ module ActionClient
         request.headers[key] = value
       end
 
+      if block
+        @middleware.unshift ActionClient::Callbacks::AfterSubmit, &block
+      end
+
       SubmittableRequest.new(@middleware, request.env)
     end
 
@@ -102,8 +112,8 @@ module ActionClient
       trace
     ).each do |verb|
       class_eval <<-RUBY, __FILE__, __LINE__ + 1
-        def #{verb}(**options)
-          build_request(method: #{verb.inspect}, **options)
+        def #{verb}(**options, &block)
+          build_request(method: #{verb.inspect}, **options, &block)
         end
       RUBY
     end

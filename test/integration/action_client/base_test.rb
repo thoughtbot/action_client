@@ -4,24 +4,6 @@ require "integration_test_case"
 module ActionClient
   class ClientTestCase < ActionClient::IntegrationTestCase
     Article = Struct.new(:id, :title)
-
-    def declare_client(controller_path = nil, &block)
-      Class.new(ActionClient::Base).tap do |client_class|
-        if controller_path.present?
-          client_class.class_eval <<~RUBY
-          def self.controller_path
-            #{controller_path.inspect}
-          end
-          RUBY
-        end
-
-        client_class.class_eval(&block)
-      end
-    end
-
-    setup do
-      ActionClient::Base.defaults = ActiveSupport::OrderedOptions.new
-    end
   end
 
   class ActionMethodsTest < ClientTestCase
