@@ -5,42 +5,54 @@ module ActionClient
   class ClientTestCase < ActionClient::IntegrationTestCase
     Article = Struct.new(:id, :title)
 
-    class BaseClient < ActionClient::Base
-      default url: "https://example.com"
+    def declare_client(controller_path = nil, &block)
+      Class.new(ActionClient::Base).tap do |client_class|
+        if controller_path.present?
+          client_class.class_eval <<~RUBY
+          def self.controller_path
+            #{controller_path.inspect}
+          end
+          RUBY
+        end
+
+        client_class.class_eval(&block)
+      end
     end
 
     setup do
-      BaseClient.defaults.headers = {}
+      ActionClient::Base.defaults = ActiveSupport::OrderedOptions.new
     end
   end
 
   class RequestsTest < ClientTestCase
     test "constructs a request that encodes the port" do
-      class ArticleClient < BaseClient
+      client = declare_client do
         def create
           post url: "https://localhost:3000/articles"
         end
       end
 
-      request = ArticleClient.create
+      request = client.create
 
       assert_equal "https://localhost:3000/articles", request.url
     end
 
     test "constructs a POST request with a JSON body declared with instance variables" do
-      class ArticleClient < BaseClient
+      client = declare_client "article_client" do
+        default url: "https://example.com"
+
         def create(article:)
           @article = article
 
           post path: "/articles"
         end
       end
-      declare_template "action_client/requests_test/article_client/create.json.erb", <<~ERB
+      declare_template "article_client/create.json.erb", <<~ERB
         <%= { title: @article.title }.to_json %>
       ERB
       article = Article.new(nil, "Article Title")
 
-      request = ArticleClient.create(article: article)
+      request = client.create(article: article)
 
       assert_equal "POST", request.method
       assert_equal "https://example.com/articles", request.original_url
@@ -49,15 +61,16 @@ module ActionClient
     end
 
     test "constructs a GET request without declaring a body template" do
-      class ArticleClient < BaseClient
+      client = declare_client do
         default headers: { "Content-Type": "application/json" }
+        default url: "https://example.com"
 
         def all
           get path: "/articles"
         end
       end
 
-      request = ArticleClient.all
+      request = client.all
 
       assert_equal "GET", request.method
       assert_equal "https://example.com/articles", request.original_url
@@ -66,13 +79,15 @@ module ActionClient
     end
 
     test "constructs an OPTIONS request without declaring a body template" do
-      class ArticleClient < BaseClient
+      client = declare_client do
+        default url: "https://example.com"
+
         def status
           options path: "/status"
         end
       end
 
-      request = ArticleClient.status
+      request = client.status
 
       assert_equal "OPTIONS", request.method
       assert_equal "https://example.com/status", request.original_url
@@ -80,13 +95,15 @@ module ActionClient
     end
 
     test "constructs a HEAD request without declaring a body template" do
-      class ArticleClient < BaseClient
+      client = declare_client do
+        default url: "https://example.com"
+
         def status
           head path: "/status"
         end
       end
 
-      request = ArticleClient.status
+      request = client.status
 
       assert_equal "HEAD", request.method
       assert_equal "https://example.com/status", request.original_url
@@ -94,13 +111,15 @@ module ActionClient
     end
 
     test "constructs a TRACE request without declaring a body template" do
-      class ArticleClient < BaseClient
+      client = declare_client do
+        default url: "https://example.com"
+
         def status
           trace path: "/status"
         end
       end
 
-      request = ArticleClient.status
+      request = client.status
 
       assert_equal "TRACE", request.method
       assert_equal "https://example.com/status", request.original_url
@@ -108,10 +127,9 @@ module ActionClient
     end
 
     test "constructs a DELETE request without declaring a body template" do
-      class ArticleClient < BaseClient
-        default headers: {
-          "Content-Type": "application/json",
-        }
+      client = declare_client do
+        default headers: { "Content-Type": "application/json" }
+        default url: "https://example.com"
 
         def destroy(article:)
           delete path: "/articles/#{article.id}"
@@ -119,7 +137,7 @@ module ActionClient
       end
       article = Article.new("1", nil)
 
-      request = ArticleClient.destroy(article: article)
+      request = client.destroy(article: article)
 
       assert_equal "DELETE", request.method
       assert_equal "https://example.com/articles/1", request.original_url
@@ -128,17 +146,19 @@ module ActionClient
     end
 
     test "constructs a DELETE request with a JSON body template" do
-      class ArticleClient < BaseClient
+      client = declare_client "article_client" do
+        default url: "https://example.com"
+
         def destroy(article:)
           delete path: "/articles/#{article.id}"
         end
       end
       article = Article.new("1", nil)
-      declare_template "action_client/requests_test/article_client/destroy.json", <<~JS
+      declare_template "article_client/destroy.json", <<~JS
       {"confirm": true}
       JS
 
-      request = ArticleClient.destroy(article: article)
+      request = client.destroy(article: article)
 
       assert_equal "DELETE", request.method
       assert_equal "https://example.com/articles/1", request.original_url
@@ -147,19 +167,21 @@ module ActionClient
     end
 
     test "constructs a PUT request with a JSON body declared with locals" do
-      class ArticleClient < BaseClient
+      client = declare_client "article_client" do
+        default url: "https://example.com"
+
         def update(article:)
           put path: "/articles/#{article.id}", locals: {
             article: article,
           }
         end
       end
-      declare_template "action_client/requests_test/article_client/update.json.erb", <<~ERB
+      declare_template "article_client/update.json.erb", <<~ERB
         <%= { title: article.title }.to_json %>
       ERB
       article = Article.new("1", "Article Title")
 
-      request = ArticleClient.update(article: article)
+      request = client.update(article: article)
 
       assert_equal "PUT", request.method
       assert_equal "https://example.com/articles/1", request.original_url
@@ -168,19 +190,21 @@ module ActionClient
     end
 
     test "constructs a PATCH request with an XML body declared with locals" do
-      class ArticleClient < BaseClient
+      client = declare_client "article_client" do
+        default url: "https://example.com"
+
         def update(article:)
           patch path: "/articles/#{article.id}", locals: {
             article: article,
           }
         end
       end
-      declare_template "action_client/requests_test/article_client/update.xml.erb", <<~ERB
+      declare_template "article_client/update.xml.erb", <<~ERB
         <xml><%= article.title %></xml>
       ERB
       article = Article.new("1", "Article Title")
 
-      request = ArticleClient.update(article: article)
+      request = client.update(article: article)
 
       assert_equal "PATCH", request.method
       assert_equal "https://example.com/articles/1", request.original_url
@@ -189,7 +213,7 @@ module ActionClient
     end
 
     test "constructs a request with a body wrapped by a layout" do
-      class ArticleClient < BaseClient
+      client = declare_client "article_client" do
         def create(article:)
           post \
             layout: "article_client",
@@ -200,12 +224,12 @@ module ActionClient
       declare_template "layouts/article_client.json.erb", <<~ERB
       { "response": <%= yield %> }
       ERB
-      declare_template "action_client/requests_test/article_client/create.json.erb", <<~ERB
+      declare_template "article_client/create.json.erb", <<~ERB
       { "title": "<%= article.title %>" }
       ERB
       article = Article.new(nil, "From Layout")
 
-      request = ArticleClient.create(article: article)
+      request = client.create(article: article)
 
       assert_equal(
         { "response" => { "title" => "From Layout" } },
@@ -214,75 +238,71 @@ module ActionClient
     end
 
     test "constructs a request with the full URL passed as an option" do
-      class ArticleClient < BaseClient
+      client = declare_client do
         def create(article:)
           post url: "https://example.com/special/articles"
         end
       end
 
-      request = ArticleClient.create(article: nil)
+      request = client.create(article: nil)
 
       assert_equal "https://example.com/special/articles", request.original_url
     end
 
     test "constructs a request with additional headers" do
-      class ArticleClient < BaseClient
-        default headers: {
-          "Content-Type": "application/json",
-        }
+      client = declare_client do
+        default url: "https://example.com"
+        default headers: { "Content-Type": "application/json" }
 
         def create(article:)
-          post path: "/articles", headers: {
-            "X-My-Header": "hello!",
-          }
+          post path: "/articles", headers: { "X-My-Header": "hello!" }
         end
       end
 
-      request = ArticleClient.create(article: nil)
+      request = client.create(article: nil)
 
       assert_equal "application/json", request.headers["Content-Type"]
       assert_equal "hello!", request.headers["X-My-Header"]
     end
 
     test "constructs a request with overridden headers" do
-      class ArticleClient < BaseClient
-        default headers: {
-          "Content-Type": "application/json",
-        }
+      client = declare_client do
+        default url: "https://example.com"
+        default headers: { "Content-Type": "application/json" }
 
         def create(article:)
-          post path: "/articles", headers: {
-            "Content-Type": "application/xml",
-          }
+          post path: "/articles", headers: { "Content-Type": "application/xml" }
         end
       end
 
-      request = ArticleClient.create(article: nil)
+      request = client.create(article: nil)
 
       assert_equal "application/xml", request.headers["Content-Type"]
     end
 
     test "raises an ArgumentError when both url: and path: are provided" do
-      class ArticleClient < BaseClient
+      client = declare_client do
         def create(article:)
           post url: "ignored", path: "ignored"
         end
       end
 
-      assert_raises ArgumentError do
-        ArticleClient.create(article: nil)
+      assert_raises ArgumentError, /path|url/ do
+        client.create(article: nil)
       end
     end
   end
 
   class ResponsesTest < ClientTestCase
     test "#submit makes an appropriate HTTP request" do
-      class ArticleClient < BaseClient
+      client = declare_client "article_client" do
+        default url: "https://example.com"
+
         def create(article:)
           post path: "/articles", locals: { article: article }
         end
       end
-      declare_template "action_client/responses_test/article_client/create.json.erb", <<~ERB
+      declare_template "article_client/create.json.erb", <<~ERB
       <%= { title: article.title }.to_json %>
       ERB
       article = Article.new(nil, "Article Title")
@@ -292,7 +312,7 @@ module ActionClient
         status: 201,
       )
 
-      code, headers, body = ArticleClient.create(article: article).submit
+      code, headers, body = client.create(article: article).submit
 
       assert_equal code, 201
       assert_equal body, {"responded" => true}
@@ -303,12 +323,14 @@ module ActionClient
     end
 
     test "#submit parses a JSON response based on the `Content-Type`" do
-      class ArticleClient < BaseClient
+      client = declare_client "article_client" do
+        default url: "https://example.com"
+
         def create(article:)
           post path: "/articles", locals: { article: article }
         end
       end
-      declare_template "action_client/responses_test/article_client/create.json.erb", <<~ERB
+      declare_template "article_client/create.json.erb", <<~ERB
       {"title": "<%= article.title %>"}
       ERB
       article = Article.new(nil, "Encoded as JSON")
@@ -318,7 +340,7 @@ module ActionClient
         status: 201,
       )
 
-      status, headers, body = ArticleClient.create(article: article).submit
+      status, headers, body = client.create(article: article).submit
 
       assert_equal 201, status
       assert_equal "application/json;charset=UTF-8", headers["Content-Type"]
@@ -326,12 +348,14 @@ module ActionClient
     end
 
     test "#submit parses an XML response based on the `Content-Type`" do
-      class ArticleClient < BaseClient
+      client = declare_client "article_client" do
+        default url: "https://example.com"
+
         def create(article:)
           post path: "/articles", locals: { article: article }
         end
       end
-      declare_template "action_client/responses_test/article_client/create.xml.erb", <<~ERB
+      declare_template "article_client/create.xml.erb", <<~ERB
       <article title="<%= article.title %>"></article>
       ERB
       article = Article.new(nil, "Encoded as XML")
@@ -341,7 +365,7 @@ module ActionClient
         status: 201,
       )
 
-      status, headers, body = ArticleClient.create(article: article).submit
+      status, headers, body = client.create(article: article).submit
 
       assert_equal 201, status
       assert_equal "application/xml", headers["Content-Type"]
