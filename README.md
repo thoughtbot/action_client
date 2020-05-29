@@ -156,6 +156,63 @@ end
 When a key-value pair exists in both the `path:` (or `url:`) option and `query:`
 option, the value present in the URL will be overridden by the `query:` value.
 
+### ActiveJob integration
+
+If the call to the Client HTTP request can occur outside of Rails'
+request-response cycle, transmit it in the background by calling
+`#submit_later`:
+
+```ruby
+request = ArticlesClient.create(title: "Hello, from ActiveJob!")
+
+request.submit_later(wait: 1.hour)
+```
+
+All [options passed to `#submit_later`][active-job-options] will be forwarded
+along to `ActiveJob`.
+
+To emphasize the immediacy of submitting a Request inline, `#submit_now` is an
+alias for `#submit`.
+
+[active-job-options]: https://guides.rubyonrails.org//active_job_basics.html#enqueue-the-job
+
+#### Extending `ActionClient::SubmissionJob`
+
+In some cases, we'll need to take action after a client submits a request from a
+background worker.
+
+To enqueued an `ActionClient::Base` descendant class' requests with a custom
+`ActiveJob`, first declare the job:
+
+```ruby
+# app/jobs/articles_client_job.rb
+class ArticlesClientJob < ActionClient::SubmissionJob
+  after_perform with_status: 500..599 do
+    status, headers, body = *response
+
+    Rails.logger.info("Retrying ArticlesClient job with status: #{status}...")
+
+    retry_job queue: "low_priority"
+  end
+end
+```
+
+Within the block, the Rack triplet is available as `response`.
+
+Next, configure your client class to enqueue jobs with that class:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  self.submission_job = ArticlesClientJob
+end
+```
+
+The `ActionClient::SubmissionJob` provides an extended version of
+[`ActiveJob::Base.after_perform`][after_perform] that accepts a `with_status:`
+option, to serve as a guard clause filter.
+
+[after_perform]: https://api.rubyonrails.org/classes/ActiveJob/Callbacks/ClassMethods.html#method-i-after_perform
+
 ## Configuration
 
 ### Declaring `default` options

@@ -15,6 +15,10 @@ module ActionClient
     class_attribute :config_path,
       instance_accessor: true
 
+    class_attribute :submission_job,
+      instance_accessor: true,
+      default: ActionClient::SubmissionJob
+
     class << self
       def inherited(descendant)
         descendant.defaults = defaults.dup
@@ -45,9 +49,9 @@ module ActionClient
         controller_path.gsub("_client", "")
       end
 
-      def method_missing(method_name, *args)
+      def method_missing(method_name, *arguments)
         if action_methods.include?(method_name.to_s)
-          self.new(middleware).process(method_name, *args)
+          self.new(middleware).process(method_name, *arguments)
         else
           super
         end
@@ -57,6 +61,15 @@ module ActionClient
     def initialize(middleware)
       super()
       @middleware = middleware.dup
+    end
+
+    def process(action_name, *arguments)
+      @action_arguments = arguments
+      super
+    end
+
+    def id
+      action_name
     end
 
     def build_request(method:, path: nil, url: nil, query: {}, headers: {}, **options, &block)
@@ -114,7 +127,12 @@ module ActionClient
         @middleware.unshift ActionClient::Callbacks::AfterSubmit, &block
       end
 
-      SubmittableRequest.new(@middleware, request.env)
+      SubmittableRequest.new(
+        @middleware,
+        request.env,
+        client: self,
+        action_arguments: @action_arguments,
+      )
     end
 
     %i(

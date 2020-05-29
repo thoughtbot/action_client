@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Integrate with `ActiveJob` by declaring
+  `ActionClient::SubmittableRequest#submit_later`. To declare background job
+  customizations, set `ActionClient::Base.submission_job` to a descendant of
+  `ActionClient::SubmissionJob`, then declare `after_perform` callbacks.
+  (added by [@seanpdoyle][])
+
 - Integrate with Rails' `config_for` by reading configuration files declared
   in `config/clients` named to match the client name. For example,
   `ArticlesClient` will read from `config/clients/articles.yml`.
