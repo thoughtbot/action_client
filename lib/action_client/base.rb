@@ -186,7 +186,7 @@ module ActionClient
 
       query_parameters = Rack::Utils.parse_query(uri.query).merge(query)
 
-      payload = CGI.unescapeHTML(body.to_s)
+      payload = CGI.unescapeHTML(body.to_s.strip)
 
       request = ActionDispatch::Request.new(
         Rack::HTTP_HOST => "#{uri.hostname}:#{uri.port}",

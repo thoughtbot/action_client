@@ -652,6 +652,184 @@ class ArticlesControllerTest < ActionDispatch::IntegrationTest
 end
 ```
 
+### Integrating with WebMock
+
+In your application's test suite, it will often be helpful to replace the
+transmission of HTTP requests with fake HTTP response data.
+
+`ActionClient` builds on top of [`webmock`][webmock] to provide an interface for
+substituting mocked HTTP responses into your test runs.
+
+To construct a `webmock`-provided [`stub_request` chain][stub_request], first
+include the `ActionClient::TestHelpers` module into your testing environment.
+Then, pass a `ActionClient`-constructed request to `stub_request`, chaining the
+typical Webmock configurations off of that object:
+
+```ruby
+class TestCase < ActiveSupport::TestCase
+  include ActionClient::TestHelpers
+
+  test "submits an HTTP request to create an Article" do
+    request = ArticlesClient.create(title: "Hello, World")
+    stub_request(request).to_return(
+      status: 422,
+      headers: { "Content-Type" => "application/json" },
+      body: { status: "invalid" }.to_json,
+    )
+
+    # ... exercise phase
+
+    assert_requested request, times: 1
+  end
+end
+```
+
+The object returned by `stub_request(ArticlesClient.create(...))` responds to
+all of the same methods as the [`webmock`-provided `stub_request`
+helper][stub_request], along with supporting some additional options.
+
+### Assertions
+
+Similar to the extensions made to [Webmock's `stub_request`][stub_request],
+mixing-in the `ActionClient::TestHelpers` module into your tests also extends
+[Webmock's `assert_requested` and `assert_not_requested`][assertions].
+
+### Stubbing return values with `to_fixture`
+
+When chaining together a `stub_request` declaration,
+invoke the `to_fixture` method to construct a response from fixture files:
+
+```ruby
+stub_request(ArticlesClient.create(title: "My Test Title")).to_fixture(
+  status: 200,
+  headers: { "X-Special-Header" => "abc123" },
+)
+```
+
+When a chain ends with `to_fixture`, `ActionClient` will:
+
+1.  lookup a view template in the `test/client/fixtures` directory named in a
+    way that corresponds to the `ActionClient::Base` descendant, and the stubbed
+    request name. In this case, the template name will be
+    `articles_client/create`.
+
+2.  render that template to a `String`
+
+3.  pass that `String` to the `to_return` method as the `body:` option
+
+4.  determine the stubbed response's [`Content-Type` header][content_type] based
+    on the format of the rendered template, and merge it into the `to_return`
+    call's `headers:` option. For example, `articles_client/create.json` will
+    result in merging `headers: { "Content-Type": application/json" }`, and
+    `articles_client/create.xml` will result in
+    `headers: { "Content-Type": "application/xml" }`.
+
+The view templates that are resolved by the `to_fixture` call can also be
+dynamic, like any other Rails template. If your fixture template requires local
+variables to render, you can pass them in as a `Hash` to the `to_fixture` call:
+
+```ruby
+stub_request(ArticlesClient.create(title: "My Test Title")).to_fixture(
+  status: 200,
+  headers: { "X-Special-Header" => "abc123" },
+  locals: { title: "My Test Title" },
+)
+```
+
+Then, reference those values in the fixture template:
+
+```json+erb
+<%# test/client/fixtures/articles_client/create.json.erb %>
+{ "id": 1, "title": "<%= title %>" }
+```
+
+By default, the request options will be made available as template-local
+variables. For example, a call to `stub_request(ArticlesClient.create(title: "My
+Title"))` will result in a `title` template-local variable with the value of `"My
+Title"`.
+
+Declaring different fixture templates for different [HTTP Status
+Codes][mdn-http-status], leveraging the power of Rails' [`ActionPack`
+variants][variants].
+
+For example, to declare fixtures for both a successful request and an invalid
+request, declare a template variant for each:
+
+```json+erb
+<%# test/client/fixtures/articles_client/create.json+created.erb %>
+{ "id": 1, "title": "<%= title %>" }
+
+<%# test/client/fixtures/articles_client/create.json+unprocessable_entity.erb %>
+{ "error": "invalid!" }
+```
+
+Then, when declaring the stub, pass that status code (as a `Symbol`) to the
+`status:` option:
+
+```ruby
+stub_request(ArticlesClient.create(title: "My Valid Title")).to_fixture(
+  status: :created, locals: { title: "My Valid Title" },
+)
+stub_request(ArticlesClient.create(title: "")).to_fixture(
+  status: :unprocessable_entity,
+)
+```
+
+If Rails' variant resolution fails to find a specific template for an HTTP
+Status variant, it will fall back to the more general template available.
+
+In addition to using [HTTP Status Code names are variants][status-code-names],
+you can also declare and refer to templates named with the Integer version as
+well.
+
+For example, to recreate the example above with Status Code Integers, declare
+the templates like so:
+
+```json+erb
+<%# test/client/fixtures/articles_client/create.json+201.erb %>
+{ "id": 1, "title": "<%= title %>" }
+
+<%# test/client/fixtures/articles_client/create.json+422.erb %>
+{ "error": "invalid!" }
+```
+
+And replace `:created` and `:unprocessable_entity` with `201` and `422`,
+respectively:
+
+
+```ruby
+stub_request(ArticlesClient.create(title: "My Valid Title")).to_fixture(
+  status: 201, locals: { title: "My Valid Title" },
+)
+stub_request(ArticlesClient.create(title: "")).to_fixture(
+  status: 422,
+)
+```
+
+**NOTE** Templates declared with variants in their file names **must** be
+suffixed with a templating language suffix. For example,
+`create.json+unprocessable_entity` _will not_ be recognized, but
+`create.json+unprocessable_entity.erb` will.
+
+[webmock]: https://github.com/bblimke/webmock
+[stub_request]: https://github.com/bblimke/webmock#stubbing
+[assertions]: https://github.com/bblimke/webmock/tree/v3.8.3#setting-expectations-in-testunit
+[content_type]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+[variants]: https://guides.rubyonrails.org/4_1_release_notes.html#action-pack-variants
+[mdn-http-status]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+[status-code-names]: https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+
+### Configuring Fixtures
+
+By default, fixture declarations are loaded from `test/clients/fixtures`, and
+can be changed by setting `config.action_client.fixtures_path`.
+
+```ruby
+# config/application.rb
+
+config.action_client.fixtures_path = "spec/fixtures/clients"
+```
+
 ### ActiveJob Assertions
 
 `ActionClient` provides a collection of assertions to verify that

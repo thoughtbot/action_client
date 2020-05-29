@@ -2,11 +2,9 @@ require "test_helper"
 require "integration_test_case"
 
 module ActionClient
-  class ClientTestCase < ActionClient::IntegrationTestCase
-    Article = Struct.new(:id, :title)
-  end
+  Article = Struct.new(:id, :title)
 
-  class ActionMethodsTest < ClientTestCase
+  class ActionMethodsTest < ActionClient::IntegrationTestCase
     test "the Base class responds to action methods" do
       client = declare_client {
         def create
@@ -35,7 +33,7 @@ module ActionClient
     end
   end
 
-  class RequestsTest < ClientTestCase
+  class RequestsTest < ActionClient::IntegrationTestCase
     test "constructs a request that encodes the port" do
       client = declare_client {
         def create
@@ -438,7 +436,7 @@ module ActionClient
     end
   end
 
-  class ResponsesTest < ClientTestCase
+  class ResponsesTest < ActionClient::IntegrationTestCase
     test "responses can be splatted into Rack triplets" do
       client = declare_client {
         def all

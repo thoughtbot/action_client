@@ -2,12 +2,17 @@ module ActionClient
   class Engine < ::Rails::Engine
     config.action_client = ActiveSupport::InheritableOptions.new(
       enable_previews: !Rails.env.production?,
+      fixtures_path: "test/clients/fixtures",
       previews_path: "test/clients/previews"
     )
 
     initializer "action_client.dependencies" do |app|
       ActionClient::Base.append_view_path app.paths["app/views"]
       ActionClient::Base.config_path = Pathname(app.paths["config"].first)
+    end
+
+    initializer "action_client.fixtures" do |app|
+      ActionClient::Test::Client.append_view_path config.action_client.fixtures_path
     end
 
     initializer "action_client.middleware" do

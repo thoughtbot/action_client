@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Integrate with [Webmock][] by extending the `stub_request` helper to accept
+  request instances built by `ActionClient::Base` descendants.
+  (added by [@seanpdoyle][])
+
+[Webmock]: https://github.com/bblimke/webmock#stubbing
+
 - Implicitly call `default` with `url:` and `headers:` declarations from a
   client's `config/clients` YAML file (added by [@seanpdoyle][])
 
