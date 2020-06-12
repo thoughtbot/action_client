@@ -178,6 +178,41 @@ Default values can be overridden on a request-by-request basis.
 When a default `url:` key is specified, a request's full URL will be built by
 joining the base `default url: ...` value with the request's `path:` option.
 
+In this example, `ArticlesClient.configuration` will read directly from the
+environment-aware `config/clients/articles.yml` file.
+
+Consider the following configuration:
+
+```yaml
+# config/clients/articles.yml
+default: &default
+  url: "https://staging.example.com"
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
+  url: "https://example.com"
+```
+
+Then from the client class, read those values directly from `configuration`:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  default url: configuration.url
+end
+```
+
+When a matching configuration file does not exist,
+`ActionClient::Base.configuration` returns an empty instance of
+[`ActiveSupport::OrderedOptions`][OrderedOptions].
+
+[OrderedOptions]: https://api.rubyonrails.org/classes/ActiveSupport/OrderedOptions.html
+
 ### Declaring `after_submit` callbacks
 
 When submitting requests from an `ActionClient::Base` descendant, it can be
@@ -310,7 +345,6 @@ class ArticlesClient < ActionClient::Base
   end
 end
 ```
-
 
 [HTTP-codes]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 [401]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401

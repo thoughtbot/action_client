@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Integrate with Rails' `config_for` by reading configuration files declared
+  in `config/clients` named to match the client name. For example,
+  `ArticlesClient` will read from `config/clients/articles.yml`.
+  (added by [@seanpdoyle][])
+
 - The `after_submit` callbacks, along with request-level block versions, and the
   specialized `with_status:` version (added by [@seanpdoyle][])
 

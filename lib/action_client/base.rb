@@ -12,10 +12,23 @@ module ActionClient
     class_attribute :middleware,
       default: ActionDispatch::MiddlewareStack.new
 
+    class_attribute :config_path,
+      instance_accessor: true
+
     class << self
       def inherited(descendant)
         descendant.defaults = defaults.dup
         descendant.middleware = middleware.dup
+      end
+
+      def configuration
+        configuration_path = config_path.join("clients", client_name + ".yml")
+
+        if configuration_path.exist?
+          Rails.application.config_for(configuration_path)
+        else
+          ActiveSupport::OrderedOptions.new
+        end
       end
 
       def default(options)
@@ -26,6 +39,10 @@ module ActionClient
 
       def after_submit(with_status: nil, &block)
         middleware.unshift ActionClient::Callbacks::AfterSubmit, with_status, &block
+      end
+
+      def client_name
+        controller_path.gsub("_client", "")
       end
 
       def method_missing(method_name, *args)

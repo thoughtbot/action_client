@@ -2,6 +2,7 @@ module ActionClient
   class Engine < ::Rails::Engine
     initializer "action_client.dependencies" do |app|
       ActionClient::Base.append_view_path app.paths["app/views"]
+      ActionClient::Base.config_path = Pathname(app.paths["config"].first)
     end
 
     initializer "action_client.middleware" do
