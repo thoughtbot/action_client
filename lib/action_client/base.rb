@@ -3,11 +3,15 @@ module ActionClient
     include AbstractController::Rendering
     include ActionView::Layouts
 
-    cattr_accessor :defaults,
+    class_attribute :defaults,
       instance_accessor: true,
       default: ActiveSupport::OrderedOptions.new
 
     class << self
+      def inherited(descendant)
+        descendant.defaults = defaults.dup
+      end
+
       def default(options)
         options.each do |key, value|
           defaults[key] = value

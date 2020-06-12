@@ -291,6 +291,33 @@ module ActionClient
         client.create(article: nil)
       end
     end
+
+    test "ensures each descendant gets its own copy of defaults" do
+      application_client = declare_client do
+        default url: "https://example.com"
+      end
+      articles_client = Class.new(application_client) do
+        default url: "https://example.com/articles"
+
+        def create
+          post
+        end
+      end
+
+      tags_client = Class.new(application_client) do
+        default url: "https://example.com/tags"
+
+        def create
+          post
+        end
+      end
+
+      articles_request = articles_client.create
+      tags_request = tags_client.create
+
+      assert_equal "https://example.com/articles", articles_request.url
+      assert_equal "https://example.com/tags", tags_request.url
+    end
   end
 
   class ResponsesTest < ClientTestCase
