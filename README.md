@@ -101,6 +101,35 @@ instances][nokogiri-document] by [`Nokogiri::XML`][nokogiri-xml].
 [nokogiri-xml]: https://nokogiri.org/rdoc/Nokogiri.html#XML-class_method
 [nokogiri-document]: https://nokogiri.org/rdoc/Nokogiri/XML/Document.html
 
+### Query Parameters
+
+To set a request's query parameters, pass them a `Hash` under the `query:`
+option:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  def all(search_term:)
+    get url: "https://examples.com/articles", query: { q: search_term }
+  end
+end
+```
+
+You can also pass query parameters directly as part of the `url:` or `path:`
+option:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  default url: "https://examples.com"
+
+  def all(search_term:, **query_parameters)
+    get path: "/articles?q={search_term}", query: query_parameters
+  end
+end
+```
+
+When a key-value pair exists in both the `path:` (or `url:`) option and `query:`
+option, the value present in the URL will be overridden by the `query:` value.
+
 ### Configuration
 
 Descendants of `ActionClient::Base` can specify some defaults:

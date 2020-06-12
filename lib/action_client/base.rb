@@ -34,9 +34,13 @@ module ActionClient
       @middleware = middleware.dup
     end
 
-    def build_request(method:, path: nil, url: nil, headers: {}, **options)
+    def build_request(method:, path: nil, url: nil, query: {}, headers: {}, **options)
       if path.present? && url.present?
         raise ArgumentError, "either pass only url:, or only path:"
+      end
+
+      if path.present? && defaults.url.blank?
+        raise ArgumentError, "path: argument without a default url: declared"
       end
 
       uri = URI(url || defaults.url)
@@ -61,11 +65,14 @@ module ActionClient
         body = ""
       end
 
+      query_parameters = Rack::Utils.parse_query(uri.query).merge(query)
+
       payload = CGI.unescapeHTML(body.to_s)
 
       request = ActionDispatch::Request.new(
         Rack::HTTP_HOST => "#{uri.hostname}:#{uri.port}",
         Rack::PATH_INFO => uri.path,
+        Rack::QUERY_STRING => query_parameters.to_query,
         Rack::RACK_INPUT => StringIO.new(payload),
         Rack::RACK_URL_SCHEME => uri.scheme,
         Rack::REQUEST_METHOD => method.to_s.upcase,

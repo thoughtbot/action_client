@@ -280,6 +280,83 @@ module ActionClient
       assert_equal "application/xml", request.headers["Content-Type"]
     end
 
+    test "joins the path: to the default url:" do
+      client = declare_client do
+        default url: "https://example.com"
+
+        def all
+          get path: "articles"
+        end
+      end
+
+      request = client.all
+
+      assert_equal "https://example.com/articles", request.url
+    end
+
+    test "supports query parameters in the url: option" do
+      client = declare_client do
+        def all
+          get url: "https://example.com/articles?q=all"
+        end
+      end
+
+      request = client.all
+
+      assert_equal "https://example.com/articles?q=all", request.url
+    end
+
+    test "supports query parameters in the path: option" do
+      client = declare_client do
+        default url: "https://example.com"
+
+        def all
+          get path: "articles?q=all"
+        end
+      end
+
+      request = client.all
+
+      assert_equal "https://example.com/articles?q=all", request.url
+    end
+
+    test "supports query in the query: option" do
+      client = declare_client do
+        def all
+          get url: "https://example.com/articles", query: { q: :all }
+        end
+      end
+
+      request = client.all
+
+      assert_equal "https://example.com/articles?q=all", request.url
+    end
+
+    test "merges URL query parameters with those passed under the query: option" do
+      client = declare_client do
+        def all(search_term:, **query_parameters)
+          get url: "https://example.com/articles?q=#{search_term}", query: query_parameters
+        end
+      end
+
+      request = client.all(search_term: "foo", page: 1)
+
+      assert_equal "https://example.com/articles?page=1&q=foo", request.url
+    end
+
+
+    test "raises an ArgumentError if path: provided without default url:" do
+      client = declare_client do
+        def create(article:)
+          post path: "ignored"
+        end
+      end
+
+      assert_raises ArgumentError, /path|url/ do
+        client.create(article: nil)
+      end
+    end
+
     test "raises an ArgumentError when both url: and path: are provided" do
       client = declare_client do
         def create(article:)
