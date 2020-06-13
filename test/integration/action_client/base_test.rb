@@ -24,6 +24,22 @@ module ActionClient
     end
   end
 
+  class ActionMethodsTest < ClientTestCase
+    test "only exposes declared requests as action_methods" do
+      client = declare_client do
+        def create
+        end
+
+        def destroy
+        end
+      end
+
+      action_methods = client.action_methods.to_a
+
+      assert_equal ["create", "destroy"], action_methods
+    end
+  end
+
   class RequestsTest < ClientTestCase
     test "constructs a request that encodes the port" do
       client = declare_client do

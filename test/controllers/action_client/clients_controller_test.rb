@@ -39,10 +39,12 @@ module ActionClient
     test "#show includes links to available previewed methods" do
       get client_path(ArticlesClientPreview.preview_name)
 
-      assert_select(
-        %(a[href*="#{client_preview_path(ArticlesClientPreview.preview_name, "create")}"]),
-        text: "create",
-      )
+      assert_select "li", count: 1 do
+        assert_select(
+          %(a[href*="#{client_preview_path(ArticlesClientPreview.preview_name, "create")}"]),
+          text: "create",
+        )
+      end
     end
   end
 end

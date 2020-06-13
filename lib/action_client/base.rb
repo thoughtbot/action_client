@@ -3,6 +3,8 @@ module ActionClient
     include AbstractController::Rendering
     include ActionView::Layouts
 
+    abstract!
+
     class_attribute :defaults,
       instance_accessor: true,
       default: ActiveSupport::OrderedOptions.new
