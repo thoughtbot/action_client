@@ -36,7 +36,7 @@ module ActionClient
 
       action_methods = client.action_methods.to_a
 
-      assert_equal ["create", "destroy"], action_methods
+      assert_equal ["create", "destroy"], action_methods.sort
     end
   end
 
