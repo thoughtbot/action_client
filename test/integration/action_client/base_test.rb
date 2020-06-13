@@ -414,6 +414,25 @@ module ActionClient
   end
 
   class ResponsesTest < ClientTestCase
+    test "responses can be splatted into Rack triplets" do
+      client = declare_client do
+        def all
+          get url: "https://example.com/articles"
+        end
+      end
+      stub_request(:any, "https://example.com/articles").and_return(
+        body: %({"responded": true}),
+        headers: {"Content-Type": "application/json"},
+        status: 201,
+      )
+
+      status, headers, body = *client.all.submit
+
+      assert_equal 201, status
+      assert_equal "application/json", headers["Content-Type"]
+      assert_equal true, body["responded"]
+    end
+
     test "#submit makes an appropriate HTTP request" do
       client = declare_client "article_client" do
         default url: "https://example.com"
@@ -432,10 +451,10 @@ module ActionClient
         status: 201,
       )
 
-      code, headers, body = client.create(article: article).submit
+      response = client.create(article: article).submit
 
-      assert_equal code, 201
-      assert_equal body, {"responded" => true}
+      assert_equal response.status, 201
+      assert_equal response.body, {"responded" => true}
       assert_requested :post, "https://example.com/articles", {
         body: {"title": "Article Title"},
         headers: { "Content-Type" => "application/json" },
@@ -460,11 +479,11 @@ module ActionClient
         status: 201,
       )
 
-      status, headers, body = client.create(article: article).submit
+      response = client.create(article: article).submit
 
-      assert_equal 201, status
-      assert_equal "application/json;charset=UTF-8", headers["Content-Type"]
-      assert_equal({"title" => article.title, "id" => 1}, body)
+      assert_equal 201, response.status
+      assert_equal "application/json;charset=UTF-8", response["Content-Type"]
+      assert_equal({"title" => article.title, "id" => 1}, response.body)
     end
 
     test "#submit parses an XML response based on the `Content-Type`" do
@@ -485,12 +504,12 @@ module ActionClient
         status: 201,
       )
 
-      status, headers, body = client.create(article: article).submit
+      response = client.create(article: article).submit
 
-      assert_equal 201, status
-      assert_equal "application/xml", headers["Content-Type"]
-      assert_equal article.title, body.root["title"]
-      assert_equal "1", body.root["id"]
+      assert_equal 201, response.status
+      assert_equal "application/xml", response["Content-Type"]
+      assert_equal article.title, response.body.root["title"]
+      assert_equal "1", response.body.root["id"]
     end
   end
 end

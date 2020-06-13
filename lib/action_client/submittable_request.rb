@@ -8,7 +8,9 @@ module ActionClient
     def submit
       app = @stack.build(ActionClient::Applications::Net::HttpClient.new)
 
-      app.call(env)
+      status, headers, body = app.call(env)
+
+      ActionClient::Response.new(body, status, headers)
     end
   end
 end

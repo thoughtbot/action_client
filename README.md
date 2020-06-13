@@ -20,6 +20,8 @@ class ArticlesClient < ActionClient::Base
 end
 ```
 
+### Requests
+
 Next, declare the request method. In this case, the semantics are similar to
 [Rails' existing controller naming conventions][naming-actions], so let's lean
 into that by declaring the `create` action so that it accepts a `title:` option:
@@ -71,17 +73,28 @@ template named `create.json.jbuilder`.
 If we were to declare the template as `create.xml.erb` or `create.xml.builder`,
 the `Content-Type` header would be set to `application/xml`.
 
-Finally, it's time to submit the request. In the application code that needs to
-make the HTTP call, invoke the `#submit` method:
+[mdn-post]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
+[naming-actions]: https://guides.rubyonrails.org/action_controller_overview.html#methods-and-actions
+[mdn-content-type]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+
+### Responses
+
+Finally, it's time to submit the request.
+
+In the application code that needs to make the HTTP call, invoke the `#submit`
+method:
 
 ```ruby
-status, headers, body = ArticlesClient.create(title: "Hello, World").submit
+request = ArticlesClient.create(title: "Hello, World")
+
+response = request.submit
 ```
 
-The `#submit` call processes the request through a stack of [Rack
-middleware][rack], and returns the request in adherence to the [Rack response
-specifications][rack-response], namely in a triple of its HTTP Status Code, the
-response Headers, and the response Body.
+The `#submit` call transmits the HTTP request, and processes the response
+through a stack of [Rack middleware][rack].
+
+The return value is an instance of a [`Rack::Response`][Rack::Response], which
+responds to `#status`, `#headers`, and `#body`.
 
 When `ActionClient` is able to infer the request's `Content-Type` to be either
 `JSON` or `XML`, it will parse the returned `body` value ahead of time.
@@ -91,11 +104,20 @@ instances][ruby-hash] by [`JSON.parse`][json-parse], and requests made with
 `application/xml` will be parsed into [`Nokogiri::XML::Document`
 instances][nokogiri-document] by [`Nokogiri::XML`][nokogiri-xml].
 
-[mdn-post]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
-[naming-actions]: https://guides.rubyonrails.org/action_controller_overview.html#methods-and-actions
-[mdn-content-type]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+If you'd prefer to deal with the [Rack status-headers-body
+triplet][rack-triplet] directly, you can coerce the
+[`Rack::Response`][Rack::Response] into an `Array` for multiple assignment by
+splatting (`*`) the return value directly:,
+
+```ruby
+request = ArticlesClient.create(title: "Hello, World")
+
+status, headers, body = *request.submit
+```
+
 [rack]: https://github.com/rack/rack
-[rack-response]: https://github.com/rack/rack/blob/master/SPEC.rdoc#the-response-
+[Rack::Response]: https://www.rubydoc.info/gems/rack/Rack/Response
+[rack-triplet]: https://github.com/rack/rack/blob/master/SPEC.rdoc#the-response-
 [json-parse]: https://ruby-doc.org/stdlib-2.6.3/libdoc/json/rdoc/JSON.html#method-i-parse
 [ruby-hash]: https://ruby-doc.org/core-2.7.1/Hash.html
 [nokogiri-xml]: https://nokogiri.org/rdoc/Nokogiri.html#XML-class_method
