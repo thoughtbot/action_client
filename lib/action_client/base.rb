@@ -49,6 +49,10 @@ module ActionClient
         controller_path.gsub("_client", "")
       end
 
+      def respond_to?(method, *arguments)
+        action_methods.include?(method.to_s) || super
+      end
+
       def method_missing(method_name, *arguments)
         if action_methods.include?(method_name.to_s)
           self.new(middleware).process(method_name, *arguments)

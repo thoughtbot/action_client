@@ -7,6 +7,19 @@ module ActionClient
   end
 
   class ActionMethodsTest < ClientTestCase
+    test "the Base class responds to action methods" do
+      client = declare_client do
+        def create
+        end
+      end
+
+      responds_to_create = client.respond_to?(:create)
+      responds_to_destroy = client.respond_to?(:destroy)
+
+      assert_equal true, responds_to_create
+      assert_equal false, responds_to_destroy
+    end
+
     test "only exposes declared requests as action_methods" do
       client = declare_client do
         def create
