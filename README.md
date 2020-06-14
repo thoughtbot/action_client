@@ -740,6 +740,31 @@ end
 [test-adapter]: https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/TestAdapter.html
 [inline-adapter]: https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/InlineAdapter.html
 
+## Instrumentation
+
+Various events throughout the lifecycle of an HTTP Request emit
+[`ActiveSupport::Notifications` events][ActiveSupport::Notifications] events:
+
+* `submit.action_client` - instruments the entire Request submission
+  * Payload:
+    * `client` - the instance of the `ActionClient::Base` descendant
+    * `action_name` - the request's action name
+    * `action_arguments` - the arguments passed to the action
+    * `request` - the underlying [`ActionDispatch::Request` instance][ActionDispatch::Request]
+
+* `http_request.action_client` - instruments the HTTP Request
+  * Payload:
+    * `request` - the underlying [`ActionDispatch::Request` instance][ActionDispatch::Request]
+
+* `parse.action_client` - instruments the Response body parsing
+  * Payload:
+    * `content_type` - the response [Content-Type][]
+    * `body` - the response body String
+
+[ActiveSupport::Notifications]: https://api.rubyonrails.org/classes/ActiveSupport/Notifications.html
+[ActionDispatch::Request]: https://api.rubyonrails.org/classes/ActionDispatch/Request.html
+[Content-Type]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+
 ## Installation
 Add this line to your application's Gemfile:
 

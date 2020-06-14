@@ -20,6 +20,19 @@ module ActionClient
             http_request[key] = value
           end
 
+          ActiveSupport::Notifications.instrument(
+            "http_request.action_client",
+            uri: uri,
+            http_request: http_request,
+            method: request.request_method
+          ) do
+            submit(http_request, uri)
+          end
+        end
+
+        private
+
+        def submit(http_request, uri)
           response = ::Net::HTTP.start(
             uri.hostname,
             uri.port,

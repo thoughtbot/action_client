@@ -58,6 +58,28 @@ module ActionClient
             }
           }
         end
+
+        test "instruments the http_request.action_client event" do
+          uri = URI("https://www.example.com/articles")
+          assertions = proc do |name, start, finish, id, payload|
+            assert_predicate finish - start, :positive?
+            assert_equal "GET", payload[:method]
+            assert_equal uri, payload[:uri]
+            assert_includes payload, :http_request
+          end
+
+          ActiveSupport::Notifications.subscribed(assertions, "http_request.action_client") do
+            stub_request(:get, uri.to_s)
+            adapter = ActionClient::Applications::Net::HttpClient.new
+
+            adapter.call(
+              Rack::HTTP_HOST => "www.example.com",
+              Rack::PATH_INFO => "/articles",
+              Rack::RACK_URL_SCHEME => "https",
+              Rack::REQUEST_METHOD => "GET"
+            )
+          end
+        end
       end
     end
   end

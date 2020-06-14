@@ -221,14 +221,22 @@ module ActionClient
     end
 
     def submit(request, after_submit: nil, &block)
-      run_callbacks(:submit) do
-        status, headers, body = block.call
+      ActiveSupport::Notifications.instrument(
+        "submit.action_client",
+        request: request,
+        client: self,
+        action_name: action_name,
+        action_arguments: action_arguments
+      ) do
+        run_callbacks(:submit) do
+          status, headers, body = block.call
 
-        @response = ActionClient::Response.new(body, status, headers)
-      end
+          @response = ActionClient::Response.new(body, status, headers)
+        end
 
-      response.tap do
-        ActionClient::Callback.call(self, response, after_submit || -> {})
+        response.tap do
+          ActionClient::Callback.call(self, response, after_submit || -> {})
+        end
       end
     end
 

@@ -14,8 +14,11 @@ module ActionClient
       ActionClient::Base.middleware = ActionDispatch::MiddlewareStack.new do |stack|
         stack.use ActionClient::Middleware::Parser, config.action_client
         stack.use Rack::ContentLength
-        stack.use Rails::Rack::Logger, [ActionClient::Middleware::Tagger]
       end
+    end
+
+    initializer "action_client.logging" do
+      ActionClient::LogSubscriber.attach_to :action_client
     end
 
     initializer "action_client.routes" do |app|

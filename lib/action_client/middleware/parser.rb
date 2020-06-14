@@ -36,16 +36,22 @@ module ActionClient
           request.headers["Accept"]
         ).to_s
 
-        if body.present?
-          parser = fetch_parser_for_content_type(content_type)
+        ActiveSupport::Notifications.instrument(
+          "parse.action_client",
+          content_type: content_type,
+          body: body
+        ) do
+          if body.present?
+            parser = fetch_parser_for_content_type(content_type)
 
-          begin
-            [status, headers, parser.call(body)]
-          rescue => error
-            raise ActionClient::ParseError.new(error, body, content_type)
+            begin
+              [status, headers, parser.call(body)]
+            rescue => error
+              raise ActionClient::ParseError.new(error, body, content_type)
+            end
+          else
+            [status, headers, body]
           end
-        else
-          [status, headers, body]
         end
       end
 
