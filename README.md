@@ -61,7 +61,7 @@ client's request action to declare it:
 ```ruby
 class ArticlesClient < ActionClient::Base
   def create(title:)
-    @title = "Hello, World"
+    @title = title
 
     post url: "https://example.com/articles"
   end
@@ -222,7 +222,7 @@ Descendants of `ActionClient::Base` can specify some defaults:
 ```ruby
 class ArticlesClient < ActionClient::Base
   default url: "https://example.com"
-  default headers: { "Content-Type": "application/json" }
+  default headers: { "Authorization": "Token #{ENV.fetch('EXAMPLE_API_TOKEN')}" }
 
   def create(title:)
     post path: "/articles", locals: { title: title }
