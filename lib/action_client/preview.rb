@@ -2,6 +2,10 @@ module ActionClient
   class Preview
     extend ActiveSupport::DescendantsTracker
 
+    class_attribute :previews_path,
+      instance_accessor: true,
+      default: "test/clients/previews"
+
     class << self
       def all
         if descendants.empty?
@@ -42,7 +46,7 @@ module ActionClient
       end
 
       def load_previews
-        Dir[Rails.root.join("test/clients/previews/**/*_preview.rb")].sort.each do |file|
+        Dir[Rails.root.join("#{previews_path}/**/*_preview.rb")].sort.each do |file|
           require_dependency(file)
         end
       end

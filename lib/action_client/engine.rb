@@ -1,6 +1,9 @@
 module ActionClient
   class Engine < ::Rails::Engine
-    config.action_client = ActiveSupport::OrderedOptions.new
+    config.action_client = ActiveSupport::InheritableOptions.new(
+      enable_previews: !Rails.env.production?,
+      previews_path: "test/clients/previews"
+    )
 
     initializer "action_client.dependencies" do |app|
       ActionClient::Base.append_view_path app.paths["app/views"]
@@ -16,7 +19,9 @@ module ActionClient
     end
 
     initializer "action_client.routes" do |app|
-      unless Rails.env.production?
+      if config.action_client.enable_previews
+        ActionClient::Preview.previews_path = config.action_client.previews_path
+
         app.routes.prepend do
           mount ActionClient::Engine => "/rails/action_client", :as => :action_client_engine
         end

@@ -517,6 +517,22 @@ command][curl].
 [action_mailer_previews]: https://guides.rubyonrails.org/action_mailer_basics.html#previewing-emails
 [curl]: https://curl.haxx.se/
 
+### Configuring Previews
+
+By default, Preview routes are available in all environments except for
+`production`, and can be changed by setting
+`config.action_client.enable_previews`.
+
+By default, Preview declarations are loaded from `test/clients/previews`, and
+can be changed by setting `config.action_client.previews_path`.
+
+```ruby
+# config/application.rb
+
+config.action_client.enable_previews = true
+config.action_client.previews_path = "spec/previews/clients"
+```
+
 ## Installation
 Add this line to your application's Gemfile:
 
