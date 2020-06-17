@@ -9,10 +9,11 @@ module ActionClient
         headers: { "Content-Type": "application/json" },
         status: 422,
       )
+      error_class = Class.new(ArgumentError)
       client = declare_client do
-        after_submit do |status, headers, body|
+        after_submit do |status, _, body|
           if status == 422
-            raise ArgumentError, body.fetch("error")
+            raise error_class, body.fetch("error")
           end
         end
 
@@ -21,9 +22,9 @@ module ActionClient
         end
       end
 
-      assert_raises ArgumentError, "failed" do
-        client.create.submit
-      end
+      exception = assert_raises(error_class) { client.create.submit }
+
+      assert_includes exception.message, "failed"
     end
 
     test "after_submit executes on the body when passed a single argument" do
@@ -54,12 +55,11 @@ module ActionClient
         status: 200,
       )
       client = declare_client do
-        after_submit do |_, _, body|
-          body["status"] = "modified"
+        after_submit do |status, headers, body|
           [
             201,
-            { "Content-Type" => "application/json" },
-            body,
+            { "Content-Type" => "text/plain" },
+            body.map { |key, value| "#{key}: #{value}" }.join,
           ]
         end
 
@@ -71,8 +71,8 @@ module ActionClient
       status, headers, body = *client.create.submit
 
       assert_equal 201, status
-      assert_equal "application/json", headers["Content-Type"]
-      assert_equal "modified", body.fetch("status")
+      assert_equal "text/plain", headers["Content-Type"]
+      assert_equal "status: created", body
     end
 
     test "executes after_submit callbacks in the order they're declared" do
@@ -140,10 +140,9 @@ module ActionClient
 
     test "does not execute after_submit blocks that don't match the status" do
       stub_request(:post, "https://example.com/articles").and_return(status: 200)
+      error_class = Class.new(ArgumentError)
       client = declare_client do
-        after_submit with_status: 422 do |status, headers, body|
-          raise ArgumentError
-        end
+        after_submit(with_status: 422) { raise error_class }
 
         def create
           post url: "https://example.com/articles"
@@ -161,19 +160,18 @@ module ActionClient
         headers: { "Content-Type": "application/json" },
         status: 422,
       )
+      error_class = Class.new(ArgumentError)
       client = declare_client do
-        after_submit with_status: 422 do |status, headers, body|
-          raise ArgumentError, body.fetch("error")
-        end
+        after_submit(with_status: 422) { |body| raise error_class, body.fetch("error") }
 
         def create
           post url: "https://example.com/articles"
         end
       end
 
-      assert_raises ArgumentError, "failed" do
-        client.create.submit
-      end
+      exception = assert_raises(error_class) { client.create.submit }
+
+      assert_includes exception.message, "failed"
     end
 
     test "can match an after_submit callback with a mixture of Numeric and Symbol status codes" do
@@ -182,9 +180,10 @@ module ActionClient
         headers: { "Content-Type": "application/json" },
         status: 401,
       )
+      error_class = Class.new(ArgumentError)
       client = declare_client do
         after_submit with_status: [:unauthorized, 403] do |body|
-          raise ArgumentError, body.fetch("error")
+          raise error_class, body.fetch("error")
         end
 
         def create
@@ -192,9 +191,9 @@ module ActionClient
         end
       end
 
-      assert_raises ArgumentError, "failed" do
-        client.create.submit
-      end
+      exception = assert_raises(error_class) { client.create.submit}
+
+      assert_includes exception.message, "failed"
     end
 
     test "can pass only the body to the block of an after_submit callback declaring a matching status code" do
@@ -203,9 +202,10 @@ module ActionClient
         headers: { "Content-Type": "application/json" },
         status: 422,
       )
+      error_class = Class.new(ArgumentError)
       client = declare_client do
         after_submit with_status: 422 do |body|
-          raise ArgumentError, body.fetch("error")
+          raise error_class, body.fetch("error")
         end
 
         def create
@@ -213,9 +213,9 @@ module ActionClient
         end
       end
 
-      assert_raises ArgumentError, "failed" do
-        client.create.submit
-      end
+      exception = assert_raises(error_class) { client.create.submit }
+
+      assert_includes exception.message, "failed"
     end
 
     test "can after_submit a callback that declares an Array containing the status code" do
@@ -224,9 +224,10 @@ module ActionClient
         headers: { "Content-Type": "application/json" },
         status: 401,
       )
+      error_class = Class.new(ArgumentError)
       client = declare_client do
-        after_submit with_status: [401, 403] do |status, headers, body|
-          raise ArgumentError, body.fetch("error")
+        after_submit with_status: [401, 403] do |body|
+          raise error_class, body.fetch("error")
         end
 
         def create
@@ -234,9 +235,9 @@ module ActionClient
         end
       end
 
-      assert_raises ArgumentError, "failed" do
-        client.create.submit
-      end
+      exception = assert_raises(error_class) { client.create.submit }
+
+      assert_includes exception.message, "failed"
     end
 
     test "can after_submit a callback that decalares a Range of matching status codes" do
@@ -245,9 +246,10 @@ module ActionClient
         headers: { "Content-Type": "application/json" },
         status: 422,
       )
+      error_class = Class.new(ArgumentError)
       client = declare_client do
-        after_submit with_status: 400..500 do |status, headers, body|
-          raise ArgumentError, body.fetch("error")
+        after_submit with_status: 400..500 do |body|
+          raise error_class, body.fetch("error")
         end
 
         def create
@@ -255,17 +257,14 @@ module ActionClient
         end
       end
 
-      assert_raises ArgumentError, "failed" do
-        client.create.submit
-      end
+      exception = assert_raises(error_class) { client.create.submit }
+
+      assert_includes exception.message, "failed"
     end
 
     test "each time a request is submitted, it receives its own middleware stack" do
       client = declare_client do
-        after_submit do |body|
-          body["callbacks"].push("class")
-          body
-        end
+        after_submit { |body| body["callbacks"].push("class"); body }
 
         def create
           post url: "https://example.com/articles" do |body|
