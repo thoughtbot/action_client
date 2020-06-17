@@ -2,8 +2,11 @@ module ActionClient
   class Base < AbstractController::Base
     include AbstractController::Rendering
     include ActionView::Layouts
+    include ActiveSupport::Callbacks
 
     abstract!
+
+    define_callbacks :submit
 
     class_attribute :defaults,
       instance_accessor: true,
@@ -18,6 +21,8 @@ module ActionClient
     class_attribute :submission_job,
       instance_accessor: true,
       default: ActionClient::SubmissionJob
+
+    attr_reader :response
 
     class << self
       def inherited(descendant)
@@ -50,8 +55,14 @@ module ActionClient
         end
       end
 
-      def after_submit(with_status: nil, &block)
-        middleware.unshift ActionClient::Callbacks::AfterSubmit, with_status, &block
+      def after_submit(method_name = nil, with_status: nil, &block)
+        http_status_filter = HttpStatusFilter.new(with_status)
+
+        set_callback :submit, :after do
+          if http_status_filter.include?(response.status)
+            ActionClient::Callback.call(self, @response, method_name || block)
+          end
+        end
       end
 
       def client_name
@@ -156,16 +167,25 @@ module ActionClient
         request.headers[key] = value
       end
 
-      if block
-        @middleware.unshift ActionClient::Callbacks::AfterSubmit, &block
-      end
-
       SubmittableRequest.new(
         @middleware,
         request.env,
         client: self,
-        action_arguments: @action_arguments
+        action_arguments: @action_arguments,
+        &block
       )
+    end
+
+    def submit(request, after_submit: nil, &block)
+      run_callbacks(:submit) do
+        status, headers, body = block.call
+
+        @response = ActionClient::Response.new(body, status, headers)
+      end
+
+      response.tap do
+        ActionClient::Callback.call(self, response, after_submit || -> {})
+      end
     end
 
     %i[

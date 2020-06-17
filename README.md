@@ -363,15 +363,35 @@ each response body by declaring an `after_submit` hook:
 
 ```ruby
 class ArticlesClient < ActionClient::Base
+  after_submit { |body| response.body = OpenStruct.new(body) }
+end
+```
+
+Alternatively, `after_submit` blocks can accept a Rack triplet of arguments:
+
+```ruby
+class ArticlesClient < ActionClient::Base
   after_submit do |status, headers, body|
-    [status, headers, OpenStruct.new(body)]
+    if status == 201
+      response.body = OpenStruct.new(body)
+    end
   end
 end
 ```
 
-When declaring `after_submit` hooks, it's important to make sure that the block
-returns a [`Rack`-compliant triplet][Rack-Response] of `status`, `headers`, and
-`body`.
+In addition to passing a block argument, you can specify a method name:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit :wrap_in_open_struct
+
+  # ...
+
+  private def wrap_in_open_struct(body)
+    response.body = OpenStruct.new(body)
+  end
+end
+```
 
 #### Declaring Request-specific callbacks
 
@@ -389,7 +409,9 @@ class ArticlesClient < ActionClient::Base
     @title = title
 
     post path: "/articles" do |status, headers, body|
-      [status, headers, Article.new(body)]
+      if status == 201
+        response.body = Article.new(body)
+      end
     end
   end
 end
@@ -410,7 +432,7 @@ class ArticlesClient < ActionClient::Base
     @title = title
 
     post path: "/articles" do |body|
-      Article.new(body)
+      response.body = Article.new(body)
     end
   end
 end

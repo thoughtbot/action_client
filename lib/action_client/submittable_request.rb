@@ -1,18 +1,17 @@
 module ActionClient
   class SubmittableRequest < ActionDispatch::Request
-    def initialize(stack, env, client:, action_arguments:)
+    def initialize(stack, env, client:, action_arguments:, &block)
       super(env)
       @stack = stack
       @client = client
       @action_arguments = action_arguments
+      @block = block
     end
 
     def submit
       app = @stack.build(ActionClient::Applications::Net::HttpClient.new)
 
-      status, headers, body = app.call(env)
-
-      ActionClient::Response.new(body, status, headers)
+      @client.submit(self, after_submit: @block) { app.call(env) }
     end
     alias submit_now submit
 
