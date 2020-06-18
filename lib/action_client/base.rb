@@ -55,8 +55,8 @@ module ActionClient
         end
       end
 
-      def after_submit(method_name = nil, with_status: nil, &block)
-        http_status_filter = HttpStatusFilter.new(with_status)
+      def after_submit(method_name = nil, only_status: nil, &block)
+        http_status_filter = HttpStatusFilter.new(only_status)
 
         set_callback :submit, :after do
           if http_status_filter.include?(response.status)

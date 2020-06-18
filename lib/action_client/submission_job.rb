@@ -2,10 +2,10 @@ module ActionClient
   class SubmissionJob < ActiveJob::Base
     attr_reader :response
 
-    def self.after_perform(with_status: nil, **options, &block)
-      if with_status.present?
+    def self.after_perform(only_status: nil, **options, &block)
+      if only_status.present?
         filter = proc do
-          HttpStatusFilter.new(with_status).include?(response.status)
+          HttpStatusFilter.new(only_status).include?(response.status)
         end
 
         super(if: filter, **options, &block)

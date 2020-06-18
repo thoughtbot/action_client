@@ -48,7 +48,7 @@ module ActionClient
             status: 500
           ).times(1)
           .then.to_return(status: 200)
-        MetricsClientJob.after_perform(with_status: 400..599) do
+        MetricsClientJob.after_perform(only_status: 400..599) do
           status, headers, body = *response
           retry_job
         end

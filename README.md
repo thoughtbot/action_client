@@ -226,7 +226,7 @@ To enqueued an `ActionClient::Base` descendant class' requests with a custom
 ```ruby
 # app/jobs/articles_client_job.rb
 class ArticlesClientJob < ActionClient::SubmissionJob
-  after_perform with_status: 500..599 do
+  after_perform only_status: 500..599 do
     status, headers, body = *response
 
     Rails.logger.info("Retrying ArticlesClient job with status: #{status}...")
@@ -247,7 +247,7 @@ end
 ```
 
 The `ActionClient::SubmissionJob` provides an extended version of
-[`ActiveJob::Base.after_perform`][after_perform] that accepts a `with_status:`
+[`ActiveJob::Base.after_perform`][after_perform] that accepts a `only_status:`
 option, to serve as a guard clause filter.
 
 [after_perform]: https://api.rubyonrails.org/classes/ActiveJob/Callbacks/ClassMethods.html#method-i-after_perform
@@ -451,11 +451,11 @@ For example, when a response has a [422 HTTP Status][422], the server is
 indicating that there were invalid parameters.
 
 To map that to an application-specific error code, declare an `after_submit`
-that passes a `with_status: 422` as a keyword argument:
+that passes a `only_status: 422` as a keyword argument:
 
 ```ruby
 class ArticlesClient < ActionClient::Base
-  after_submit with_status: 422 do |status, headers, body|
+  after_submit only_status: 422 do |status, headers, body|
     raise MyApplication::InvalidDataError, body.fetch("error")
   end
 end
@@ -465,16 +465,16 @@ In some cases, there are multiple HTTP Status codes that might map to a similar
 concept. For example, a [401][] and [403][] might correspond to similar concepts
 in your application, and you might want to handle them the same way.
 
-You can pass them to `after_submit with_status:` as either an
+You can pass them to `after_submit only_status:` as either an
 [`Array`][ruby-array] or a [`Range`][ruby-range]:
 
 ```ruby
 class ArticlesClient < ActionClient::Base
-  after_submit with_status: [401, 403] do |status, headers, body|
+  after_submit only_status: [401, 403] do |status, headers, body|
     raise MyApplication::SecurityError, body.fetch("error")
   end
 
-  after_submit with_status: 401..403 do |status, headers, body|
+  after_submit only_status: 401..403 do |status, headers, body|
     raise MyApplication::SecurityError, body.fetch("error")
   end
 end
@@ -485,7 +485,7 @@ with a single argument:
 
 ```ruby
 class ArticlesClient < ActionClient::Base
-  after_submit with_status: 422 do |body|
+  after_submit only_status: 422 do |body|
     raise MyApplication::ArgumentError, body.fetch("error")
   end
 end
@@ -497,11 +497,11 @@ Status Code][status-code-name]:
 
 ```ruby
 class ArticlesClient < ActionClient::Base
-  after_submit with_status: :unprocessable_entity do |body|
+  after_submit only_status: :unprocessable_entity do |body|
     raise MyApplication::ArgumentError, body.fetch("error")
   end
 
-  after_submit with_status: [:unauthorized, :forbidden] do |body|
+  after_submit only_status: [:unauthorized, :forbidden] do |body|
     raise MyApplication::SecurityError, body.fetch("error")
   end
 end

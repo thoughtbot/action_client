@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Rename `with_status:` option for `after_submit` and `after_perform`
+  declarations to `only_status:` (added by [@seanpdoyle][])
+
 - Configure whether or not to mount Preview routes along with the directory
   they're loaded from.
   (added by [@seanpdoyle][])

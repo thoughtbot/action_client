@@ -55,7 +55,7 @@ module ActionClient
         status: 422
       )
       client = declare_client {
-        after_submit :raise_error, with_status: 422
+        after_submit :raise_error, only_status: 422
 
         def create
           post url: "https://example.com/articles"
@@ -182,7 +182,7 @@ module ActionClient
       stub_request(:post, "https://example.com/articles").and_return(status: 200)
       error_class = Class.new(ArgumentError)
       client = declare_client {
-        after_submit(with_status: 422) { raise error_class }
+        after_submit(only_status: 422) { raise error_class }
 
         def create
           post url: "https://example.com/articles"
@@ -202,7 +202,7 @@ module ActionClient
       )
       error_class = Class.new(ArgumentError)
       client = declare_client {
-        after_submit(with_status: 422) { |body| raise error_class, body.fetch("error") }
+        after_submit(only_status: 422) { |body| raise error_class, body.fetch("error") }
 
         def create
           post url: "https://example.com/articles"
@@ -222,7 +222,7 @@ module ActionClient
       )
       error_class = Class.new(ArgumentError)
       client = declare_client {
-        after_submit with_status: [:unauthorized, 403] do |body|
+        after_submit only_status: [:unauthorized, 403] do |body|
           raise error_class, body.fetch("error")
         end
 
@@ -244,7 +244,7 @@ module ActionClient
       )
       error_class = Class.new(ArgumentError)
       client = declare_client {
-        after_submit with_status: 422 do |body|
+        after_submit only_status: 422 do |body|
           raise error_class, body.fetch("error")
         end
 
@@ -266,7 +266,7 @@ module ActionClient
       )
       error_class = Class.new(ArgumentError)
       client = declare_client {
-        after_submit with_status: [401, 403] do |body|
+        after_submit only_status: [401, 403] do |body|
           raise error_class, body.fetch("error")
         end
 
@@ -288,7 +288,7 @@ module ActionClient
       )
       error_class = Class.new(ArgumentError)
       client = declare_client {
-        after_submit with_status: 400..500 do |body|
+        after_submit only_status: 400..500 do |body|
           raise error_class, body.fetch("error")
         end
 
