@@ -69,6 +69,25 @@ module ActionClient
       assert_raises(CallbackError) { client.create.submit }
     end
 
+    test "executes methods specified in an after_submit callback when not matching the status" do
+      stub_request(:post, "https://example.com/articles").and_return(
+        status: 422
+      )
+      client = declare_client {
+        after_submit :raise_error, except_status: 200
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        private def raise_error
+          raise CallbackError
+        end
+      }
+
+      assert_raises(CallbackError) { client.create.submit }
+    end
+
     test "after_submit executes on the body when passed a single argument" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"status": "created"}),

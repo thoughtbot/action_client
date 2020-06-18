@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add support for `except_status:` to exclude `after_submit` execution for a
+  given set of HTTP Status codes (added by [@seanpdoyle][])
+
 - Rename `with_status:` option for `after_submit` and `after_perform`
   declarations to `only_status:` (added by [@seanpdoyle][])
 

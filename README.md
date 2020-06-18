@@ -507,6 +507,19 @@ class ArticlesClient < ActionClient::Base
 end
 ```
 
+### Excluding an `after_submit` for a range of HTTP Status Codes
+
+To _exclude_ responses that don't match a particular set of HTTP Status codes,
+declare the `after_submit` with `except_status:` instead:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit except_status: [:success, :created] do |body|
+    raise MyApplication::ArgumentError, body.fetch("error")
+  end
+end
+```
+
 [HTTP-codes]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 [401]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
 [403]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403

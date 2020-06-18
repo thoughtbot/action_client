@@ -1,22 +1,29 @@
 module ActionClient
   class HttpStatusFilter
-    def initialize(http_status)
+    def initialize(http_status, inclusion: true)
       @http_status = http_status
+      @inclusion = inclusion
     end
 
     def include?(matching_status)
       code = to_code(matching_status)
 
-      if status_codes.respond_to?(:cover?)
+      included = if status_codes.respond_to?(:cover?)
         status_codes.cover? code
       else
         status_codes.include? code
+      end
+
+      if inclusion
+        included
+      else
+        !included
       end
     end
 
     private
 
-    attr_reader :http_status
+    attr_reader :http_status, :inclusion
 
     def status_codes
       case http_status
