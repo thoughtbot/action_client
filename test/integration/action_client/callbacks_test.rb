@@ -505,5 +505,73 @@ module ActionClient
 
       assert_raises(CallbackError) { client.create.submit }
     end
+
+    test "raises an exception when both a method_name and block are passed" do
+      exception = assert_raises(ArgumentError) {
+        declare_client do
+          after_submit :raise_error do
+            # ignored
+          end
+        end
+      }
+
+      assert_includes exception.message, "method name"
+      assert_includes exception.message, "block"
+    end
+
+    test "raises an exception when both only: and except: are declared" do
+      exception = assert_raises(ArgumentError) {
+        declare_client do
+          after_submit :raise_error, except: :all, only: [:create, :all]
+        end
+      }
+
+      assert_includes exception.message, "only:"
+      assert_includes exception.message, "except:"
+    end
+
+    test "raises an exception when both only_status: and except_status: are declared" do
+      exception = assert_raises(ArgumentError) {
+        declare_client do
+          after_submit :raise_error, except_status: 200, only_status: 201
+        end
+      }
+
+      assert_includes exception.message, "only_status:"
+      assert_includes exception.message, "except_status:"
+    end
+  end
+
+  class CallbackCombinesOptionsTest < ActionClient::IntegrationTestCase
+    CallbackError = Class.new(StandardError)
+
+    test "can filter after_submit by both action name and HTTP status" do
+      stub_request(:post, "https://example.com/articles").to_return(status: 422)
+      stub_request(:get, "https://example.com/articles").to_return(
+        status: 200,
+        body: "success"
+      )
+      client = declare_client {
+        after_submit :raise_error, except_status: 201, only: [:create]
+        after_submit { |body| response.body = body.upcase }
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        def all
+          get url: "https://example.com/articles"
+        end
+
+        private def raise_error
+          raise CallbackError
+        end
+      }
+
+      *, all_body = *client.all.submit
+      assert_raises(CallbackError) { client.create.submit }
+
+      assert_equal "SUCCESS", all_body
+    end
   end
 end

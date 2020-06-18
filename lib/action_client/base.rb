@@ -56,6 +56,18 @@ module ActionClient
       end
 
       def after_submit(method_name = nil, only: nil, except: nil, only_status: nil, except_status: nil, &block)
+        if [only, except].all?(&:present?)
+          raise ArgumentError, "either pass only: or except:, not both"
+        end
+
+        if [only_status, except_status].all?(&:present?)
+          raise ArgumentError, "either pass only_status: or except_status:, not both"
+        end
+
+        if [method_name, block].all?(&:present?)
+          raise ArgumentError, "either pass method name or block, not both"
+        end
+
         http_status_filter = if only_status.present?
           HttpStatusFilter.new(only_status)
         elsif except_status.present?
