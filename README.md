@@ -468,6 +468,28 @@ class ArticlesClient < ActionClient::Base
 end
 ```
 
+Similarly, to specify which actions an `after_submit` hook **should not**
+execute for, declare an `after_submit` that passes theirs names as the `except:`
+option:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit(except: [:all]) { |body| Article.new(body) }
+
+  def create
+    # ...
+  end
+
+  def update
+    # ...
+  end
+
+  def all
+    # ...
+  end
+end
+```
+
 ### Executing `after_submit` for a range of HTTP Status Codes
 
 In some cases, applications might want to raise Errors based on a response's

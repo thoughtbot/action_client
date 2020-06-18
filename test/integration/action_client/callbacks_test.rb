@@ -443,6 +443,50 @@ module ActionClient
       assert_raises(CallbackError) { client.all.submit }
     end
 
+    test "skips execution of a single method specified by except: in an after_submit callback" do
+      stub_request(:post, "https://example.com/articles").to_return(body: "success")
+      client = declare_client {
+        after_submit :raise_error, except: :create
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        private def raise_error
+          raise CallbackError
+        end
+      }
+
+      *, body = *client.create.submit
+
+      assert_equal "success", body
+    end
+
+    test "skips execution of multiple methods specified by except: in an after_submit callback" do
+      stub_request(:any, "https://example.com/articles").to_return(body: "success")
+      client = declare_client {
+        after_submit :raise_error, except: [:create, :all]
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        def all
+          get url: "https://example.com/articles"
+        end
+
+        private def raise_error
+          raise CallbackError
+        end
+      }
+
+      *, create_body = *client.create.submit
+      *, all_body = *client.all.submit
+
+      assert_equal "success", create_body
+      assert_equal "success", all_body
+    end
+
     test "executes methods specified in an after_submit callback when not matching the status" do
       stub_request(:post, "https://example.com/articles").and_return(
         status: 422
