@@ -6,9 +6,13 @@ module ActionClient
       end
 
       def call(env)
+        request = ActionDispatch::Request.new(env)
         status, headers, body_proxy = @app.call(env)
         body = body_proxy.each(&:yield_self).sum
-        content_type = headers[Rack::CONTENT_TYPE].to_s
+        content_type = headers.fetch(
+          Rack::CONTENT_TYPE,
+          request.headers["Accept"]
+        ).to_s
 
         if body.present?
           if content_type.starts_with?("application/json")

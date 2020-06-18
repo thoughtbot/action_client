@@ -3,6 +3,19 @@ require "test_helper"
 module ActionClient
   module Middleware
     class ResponseParserTest < ActiveSupport::TestCase
+      test "#call infers missing Content-Type based on the request's Accept header" do
+        payload = %({"response": true})
+        app = ->(env) { [200, {}, env[Rack::RACK_INPUT]] }
+        middleware = ActionClient::Middleware::ResponseParser.new(app)
+
+        *, body = middleware.call({
+          "HTTP_ACCEPT" => "application/json",
+          Rack::RACK_INPUT => payload.lines
+        })
+
+        assert_equal({"response" => true}, body)
+      end
+
       test "#call decodes application/json to JSON" do
         payload = %({"response": true})
         app = proc do |env|

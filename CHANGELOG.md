@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- When determining how to parse the response, fall back to the request's
+  `Accept` header when the response's `Content-Type` header is missing
+  (added by [@seanpdoyle][])
+
 - Add support for inferring `Content-Type` based on the extension of raw
   templates (e.g. `articles_client/create.json`) (added by [@seanpdoyle[]])
 
