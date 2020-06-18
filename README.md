@@ -236,6 +236,22 @@ class ArticlesClientJob < ActionClient::SubmissionJob
 end
 ```
 
+Similarly, to execute an `after_perform` for statuses that **do not match**
+the given status codes, declare the `except_status:` option:
+
+```ruby
+# app/jobs/articles_client_job.rb
+class ArticlesClientJob < ActionClient::SubmissionJob
+  after_perform except_status: 200 do
+    status, headers, body = *response
+
+    Rails.logger.info("Retrying ArticlesClient job with status: #{status}...")
+
+    retry_job queue: "low_priority"
+  end
+end
+```
+
 Within the block, the Rack triplet is available as `response`.
 
 Next, configure your client class to enqueue jobs with that class:

@@ -2,16 +2,22 @@ module ActionClient
   class SubmissionJob < ActiveJob::Base
     attr_reader :response
 
-    def self.after_perform(only_status: nil, **options, &block)
-      if only_status.present?
-        filter = proc do
-          HttpStatusFilter.new(only_status).include?(response.status)
-        end
-
-        super(if: filter, **options, &block)
-      else
-        super(**options, &block)
+    def self.after_perform(only_status: nil, except_status: nil, **options, &block)
+      if [only_status, except_status].all?(&:present?)
+        raise ArgumentError, "either pass only_status: or except_status:, not both"
       end
+
+      http_status_filter = if only_status.present?
+        HttpStatusFilter.new(only_status)
+      elsif except_status.present?
+        HttpStatusFilter.new(except_status, inclusion: false)
+      else
+        HttpStatusFilter.new(nil)
+      end
+
+      options[:if] = -> { http_status_filter.include?(response.status) }
+
+      super(**options, &block)
     end
 
     def perform(client_class_name, action_name, *arguments)

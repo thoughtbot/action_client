@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add support for `except_status:` to omit execution of an `after_perform` hook
+  for an `ActionClient::SubmissionJob` descendant (added by [@seanpdoyle][])
+
 - Add support for `except:` to omit execution of `after_submit` hooks for a
   given set of action names (added by [@seanpdoyle][])
 
