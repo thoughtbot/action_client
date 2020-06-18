@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Determine a request's missing `Accept` HTTP Header based on the URL path's
+  file extension (added by [@seanpdoyle][])
+
 - When determining how to parse the response, fall back to the request's
   `Accept` header when the response's `Content-Type` header is missing
   (added by [@seanpdoyle][])

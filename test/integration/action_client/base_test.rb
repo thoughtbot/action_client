@@ -374,6 +374,18 @@ module ActionClient
       assert_equal "https://example.com/articles?page=1&q=foo", request.url
     end
 
+    test "resolves the Accept header from the URL extension" do
+      client = declare_client {
+        def all
+          get url: "https://example.com/articles.json"
+        end
+      }
+
+      request = client.all
+
+      assert_equal "application/json", request.headers["Accept"]
+    end
+
     test "raises an ArgumentError if path: provided without default url:" do
       client = declare_client {
         def create(article:)

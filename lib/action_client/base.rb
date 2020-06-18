@@ -126,6 +126,9 @@ module ActionClient
         body = ""
       end
 
+      file_extension = File.extname(uri.path).delete_prefix(".")
+      accept = Mime[file_extension].to_s
+
       query_parameters = Rack::Utils.parse_query(uri.query).merge(query)
 
       payload = CGI.unescapeHTML(body.to_s)
@@ -140,7 +143,7 @@ module ActionClient
       )
 
       headers.with_defaults(
-        "Accept" => content_type,
+        "Accept" => [accept, content_type].detect(&:present?),
         Rack::CONTENT_TYPE => content_type
       ).each do |key, value|
         request.headers[key] = value

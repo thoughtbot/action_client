@@ -68,18 +68,23 @@ class ArticlesClient < ActionClient::Base
 end
 ```
 
-By default, `ActionClient` will deduce the request's [`Content-Type:
-application/json` HTTP header][mdn-content-type] based on the format of the
-action's template. In this case, since we've declared `.json.erb`, the
-`Content-Type` will be set to `application/json`. The same would be true for a
-template named `create.json.jbuilder`.
+By default, `ActionClient` will deduce the request's
+[`Content-Type`][mdn-content-type] and [`Accept`][mdn-accept] HTTP headers based
+on the format of the action's template. In this example's case, since we've
+declared `.json.erb`, the `Content-Type` will be set to `application/json`. The
+same would be true for a template named `create.json.jbuilder`.
 
 If we were to declare the template as `create.xml.erb` or `create.xml.builder`,
 the `Content-Type` header would be set to `application/xml`.
 
+For requests that have not explicitly set the `Accept` header and cannot infer
+it from the body's template format, a URL with a file extension will be used to
+determine the [`Accept` header][mdn-accept].
+
 [mdn-post]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
 [naming-actions]: https://guides.rubyonrails.org/action_controller_overview.html#methods-and-actions
 [mdn-content-type]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+[mdn-accept]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
 
 ### Responses
 
