@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Merge descendant `default headers: {}` declarations into inherited values
+  (added by [@seanpdoyle][])
+
 - Determine a request's missing `Accept` HTTP Header based on the URL path's
   file extension (added by [@seanpdoyle][])
 

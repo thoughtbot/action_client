@@ -39,7 +39,14 @@ module ActionClient
 
       def default(options)
         options.each do |key, value|
-          defaults[key] = value
+          default_value = defaults[key]
+
+          defaults[key] = case default_value
+          when Hash
+            default_value.with_indifferent_access.merge(value)
+          else
+            value
+          end
         end
       end
 

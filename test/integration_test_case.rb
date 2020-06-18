@@ -5,8 +5,8 @@ module ActionClient
   class IntegrationTestCase < ActiveSupport::TestCase
     include TemplateTestHelpers
 
-    def declare_client(controller_path = nil, &block)
-      Class.new(ActionClient::Base).tap do |client_class|
+    def declare_client(controller_path = nil, inherits: ActionClient::Base, &block)
+      Class.new(inherits).tap do |client_class|
         if controller_path.present?
           client_class.class_eval <<~RUBY, __FILE__, __LINE__ + 1
             def self.controller_path

@@ -235,6 +235,29 @@ class ArticlesClient < ActionClient::Base
 end
 ```
 
+When specifying default `headers:` values, descendant key-value pairs will
+override inherited key-value pairs. Consider the following inheritance
+hierarchy:
+
+```ruby
+class ApplicationClient < ActionClient::Base
+  default headers: {
+    "X-Special": "abc123",
+    "Content-Type": "text/plain",
+  }
+end
+
+class ArticlesClient < ApplicationClient
+  default headers: {
+    "Content-Type": "application/json"
+  }
+end
+```
+
+Requests made by the `ArticlesClient` will inherit the `X-Special` header from
+the `ApplicationClient`, and will override the `Content-Type` header to
+`application/json`, since it's declared in the descendant class.
+
 Default values can be overridden on a request-by-request basis.
 
 When a default `url:` key is specified, a request's full URL will be built by

@@ -3,6 +3,29 @@ require "integration_test_case"
 
 module ActionClient
   class ConfigurationTestCase < ActionClient::IntegrationTestCase
+    test "default headers will cascade down the inheritance hierarchy" do
+      application_client = declare_client("application_client") {
+        default headers: {
+          "X-Special": "abc123",
+          "Content-Type": "text/plain"
+        }
+      }
+      client = declare_client(inherits: application_client) {
+        default headers: {
+          "Content-Type": "application/json"
+        }
+
+        def all
+          get url: "https://example.com/articles"
+        end
+      }
+
+      request = client.all
+
+      assert_equal "abc123", request.headers["X-Special"]
+      assert_equal "application/json", request.headers["Content-Type"]
+    end
+
     test "can read configuration values from a file" do
       declare_config "clients/articles.yml", <<~YAML
         test:
