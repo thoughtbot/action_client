@@ -442,6 +442,32 @@ end
 [Rack-Response]: https://github.com/rack/rack/blob/master/SPEC.rdoc#label-Rack+applications
 [ruby-block]: https://ruby-doc.org/core-2.7.1/doc/syntax/methods_rdoc.html#label-Block+Argument
 
+### Executing `after_submit` for a set of Requests
+
+In some cases, a `ActionClient::Base` descendant might want to execute an
+`after_submit` hook for a certain set of Request actions.
+
+To specify which actions an `after_submit` hook should execute for, declare an
+`after_submit` that passes theirs names as the `only:` option:
+
+```ruby
+class ArticlesClient < ActionClient::Base
+  after_submit(only: [:create, :update]) { |body| Article.new(body) }
+
+  def create
+    # ...
+  end
+
+  def update
+    # ...
+  end
+
+  def all
+    # ...
+  end
+end
+```
+
 ### Executing `after_submit` for a range of HTTP Status Codes
 
 In some cases, applications might want to raise Errors based on a response's

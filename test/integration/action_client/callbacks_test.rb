@@ -5,7 +5,7 @@ module ActionClient
   class CallbacksTest < ActionClient::IntegrationTestCase
     CallbackError = Class.new(StandardError)
 
-    test "executes code declared in an after_submit callback" do
+    test "executes a block declared in an after_submit callback" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"error": "failed"}),
         headers: {"Content-Type": "application/json"},
@@ -358,6 +358,108 @@ module ActionClient
       assert_equal ["class", "create"], create_response.body["callbacks"]
       assert_equal ["class", "destroy"], destroy_response.body["callbacks"]
       assert_equal ["class"], all_response.body["callbacks"]
+    end
+  end
+
+  class CallbackActionNameTest < ActionClient::IntegrationTestCase
+    CallbackError = Class.new(StandardError)
+
+    test "executes methods specified in an after_submit callback" do
+      stub_request(:post, "https://example.com/articles").and_return(
+        body: %(success)
+      )
+      client = declare_client {
+        after_submit :upcase_body
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        private def upcase_body(status, headers, body)
+          response.body = body.upcase
+        end
+      }
+
+      response = client.create.submit
+
+      assert_equal "SUCCESS", response.body
+    end
+
+    test "executes methods specified in an after_submit callback matching the status" do
+      stub_request(:post, "https://example.com/articles").and_return(
+        status: 422
+      )
+      client = declare_client {
+        after_submit :raise_error, only_status: 422
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        private def raise_error
+          raise CallbackError
+        end
+      }
+
+      assert_raises(CallbackError) { client.create.submit }
+    end
+
+    test "executes a single method specified by only: in an after_submit callback" do
+      stub_request(:post, "https://example.com/articles")
+      client = declare_client {
+        after_submit :raise_error, only: :create
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        private def raise_error
+          raise CallbackError
+        end
+      }
+
+      assert_raises(CallbackError) { client.create.submit }
+    end
+
+    test "executes multiple methods specified by only: in an after_submit callback" do
+      stub_request(:any, "https://example.com/articles")
+      client = declare_client {
+        after_submit :raise_error, only: [:create, :all]
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        def all
+          get url: "https://example.com/articles"
+        end
+
+        private def raise_error
+          raise CallbackError
+        end
+      }
+
+      assert_raises(CallbackError) { client.create.submit }
+      assert_raises(CallbackError) { client.all.submit }
+    end
+
+    test "executes methods specified in an after_submit callback when not matching the status" do
+      stub_request(:post, "https://example.com/articles").and_return(
+        status: 422
+      )
+      client = declare_client {
+        after_submit :raise_error, except_status: 200
+
+        def create
+          post url: "https://example.com/articles"
+        end
+
+        private def raise_error
+          raise CallbackError
+        end
+      }
+
+      assert_raises(CallbackError) { client.create.submit }
     end
   end
 end

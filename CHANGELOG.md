@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add support for `only:` to execute `after_submit` hooks for a given set of
+  action names (added by [@seanpdoyle][])
+
 - Add support for `except_status:` to exclude `after_submit` execution for a
   given set of HTTP Status codes (added by [@seanpdoyle][])
 
