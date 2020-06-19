@@ -23,7 +23,7 @@ module ActionClient
 
       assert_select(
         %(a[href*="#{client_path(ArticlesClientPreview.preview_name)}"]),
-        text: ArticlesClientPreview.preview_name,
+        text: ArticlesClientPreview.preview_name
       )
     end
 
@@ -32,7 +32,7 @@ module ActionClient
 
       assert_select(
         %(a[href*="#{clients_path}"]),
-        text: ActionClient::Preview.name.pluralize,
+        text: ActionClient::Preview.name.pluralize
       )
     end
 
@@ -42,7 +42,7 @@ module ActionClient
       assert_select "li", count: 1 do
         assert_select(
           %(a[href*="#{client_preview_path(ArticlesClientPreview.preview_name, "create")}"]),
-          text: "create",
+          text: "create"
         )
       end
     end

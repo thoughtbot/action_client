@@ -30,8 +30,8 @@ module ActionClient
 
           ActionDispatch::Response.new(
             response.code,
-            response.each_header.to_h.transform_keys { |key| key.titleize.gsub(" ", "-") },
-            Array(response.body),
+            response.each_header.to_h.transform_keys { |key| key.titleize.tr(" ", "-") },
+            Array(response.body)
           ).to_a
         end
       end

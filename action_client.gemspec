@@ -5,14 +5,14 @@ require "action_client/version"
 
 # Describe your gem and declare its dependencies:
 Gem::Specification.new do |spec|
-  spec.name        = "action_client"
-  spec.version     = ActionClient::VERSION
-  spec.authors     = ["Sean Doyle"]
-  spec.email       = ["sean.p.doyle24@gmail.com"]
-  spec.homepage    = "https://github.com/seanpdoyle/action_client"
-  spec.summary     = "HTTP Clients, the Rails way"
+  spec.name = "action_client"
+  spec.version = ActionClient::VERSION
+  spec.authors = ["Sean Doyle"]
+  spec.email = ["sean.p.doyle24@gmail.com"]
+  spec.homepage = "https://github.com/seanpdoyle/action_client"
+  spec.summary = "HTTP Clients, the Rails way"
   spec.description = "Write HTTP clients in the style of Controllers and Mailers"
-  spec.license     = "MIT"
+  spec.license = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.

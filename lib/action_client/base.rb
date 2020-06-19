@@ -57,7 +57,7 @@ module ActionClient
 
       def method_missing(method_name, *arguments)
         if action_methods.include?(method_name.to_s)
-          self.new(middleware).process(method_name, *arguments)
+          new(middleware).process(method_name, *arguments)
         else
           super
         end
@@ -129,12 +129,12 @@ module ActionClient
         Rack::QUERY_STRING => query_parameters.to_query,
         Rack::RACK_INPUT => StringIO.new(payload),
         Rack::RACK_URL_SCHEME => uri.scheme,
-        Rack::REQUEST_METHOD => method.to_s.upcase,
+        Rack::REQUEST_METHOD => method.to_s.upcase
       )
 
       headers.with_defaults(
         "Accept" => content_type,
-        Rack::CONTENT_TYPE => content_type,
+        Rack::CONTENT_TYPE => content_type
       ).each do |key, value|
         request.headers[key] = value
       end
@@ -147,11 +147,11 @@ module ActionClient
         @middleware,
         request.env,
         client: self,
-        action_arguments: @action_arguments,
+        action_arguments: @action_arguments
       )
     end
 
-    %i(
+    %i[
       connect
       delete
       get
@@ -161,7 +161,7 @@ module ActionClient
       post
       put
       trace
-    ).each do |verb|
+    ].each do |verb|
       class_eval <<-RUBY, __FILE__, __LINE__ + 1
         def #{verb}(**options, &block)
           build_request(method: #{verb.inspect}, **options, &block)

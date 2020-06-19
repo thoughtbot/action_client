@@ -1,4 +1,4 @@
-require_relative 'boot'
+require_relative "boot"
 
 require "rails"
 # Pick the frameworks you want:
@@ -19,7 +19,7 @@ require "action_client"
 module Dummy
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults (
+    config.load_defaults(
       if ENV["RAILS_VERSION"] == "master"
         6.1
       else

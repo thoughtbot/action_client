@@ -5,11 +5,11 @@ module ActionClient
   class ActiveJobTest < ActionClient::ActiveJobTestCase
     # freeze so that test cases don't accidentally leak state across classes
     MetricsClientJob = Class.new(ActionClient::SubmissionJob).freeze
-    MetricsClient = Class.new(ActionClient::Base) do
+    MetricsClient = Class.new(ActionClient::Base) {
       def ping
         get url: "https://example.com/ping"
       end
-    end
+    }
 
     class AfterPerformWithoutOptionsTest < ActiveJobTest
       MetricsClientJob = Class.new(ActionClient::SubmissionJob)
@@ -18,8 +18,8 @@ module ActionClient
 
       test "#after_perform without options always executes" do
         stub_request(:get, "https://example.com/ping").to_return(
-          headers: { "Content-Type": "application/json" },
-          body: { status: "success" }.to_json,
+          headers: {"Content-Type": "application/json"},
+          body: {status: "success"}.to_json
         )
         status, headers, body = []
         MetricsClientJob.after_perform { status, headers, body = *response }
@@ -41,13 +41,13 @@ module ActionClient
 
       test "#after_perform executes a block for matching status codes" do
         status, headers, body = []
-        stub_request(:get, "https://example.com/ping").
-          to_return(
-            headers: { "Content-Type": "application/json" },
-            body: { status: "error" }.to_json,
+        stub_request(:get, "https://example.com/ping")
+          .to_return(
+            headers: {"Content-Type": "application/json"},
+            body: {status: "error"}.to_json,
             status: 500
-          ).times(1).
-          then.to_return(status: 200)
+          ).times(1)
+          .then.to_return(status: 200)
         MetricsClientJob.after_perform(with_status: 400..599) do
           status, headers, body = *response
           retry_job

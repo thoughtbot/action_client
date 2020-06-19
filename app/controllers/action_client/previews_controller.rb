@@ -9,7 +9,7 @@ module ActionClient
 
         render locals: {
           client: client,
-          preview: preview,
+          preview: preview
         }
       else
         raise AbstractController::ActionNotFound

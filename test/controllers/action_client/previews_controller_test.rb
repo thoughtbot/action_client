@@ -8,7 +8,7 @@ module ActionClient
 
     class ArticleClient < ActionClient::Base
       def create(title:)
-        post url: "https://example.com/articles", locals: { title: title }
+        post url: "https://example.com/articles", locals: {title: title}
       end
     end
 
@@ -24,13 +24,13 @@ module ActionClient
 
     test "action_client/previews displays information about the request" do
       declare_template "action_client/previews_controller_test/article_client/create.json.erb", <<~ERB
-      {"title": "<%= title %>"}
+        {"title": "<%= title %>"}
       ERB
 
       get client_preview_path(ArticlesClientPreview.preview_name, "create")
 
       assert_select "#url", text: "\nPOST https://example.com/articles\n"
-      assert_select "#body", text: JSON.pretty_generate({ title: "Hello, World" })
+      assert_select "#body", text: JSON.pretty_generate({title: "Hello, World"})
     end
 
     test "action_client/previews omits body when a template is not declared" do

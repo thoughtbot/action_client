@@ -1,6 +1,6 @@
 module ActionClient
   module Callbacks
-    TripleArgumentCallback = Struct.new(:status, :headers, :body) do
+    TripleArgumentCallback = Struct.new(:status, :headers, :body) {
       def call(block)
         block.call(status, headers, body).tap do |response|
           response = Array(response)
@@ -16,6 +16,6 @@ module ActionClient
           end
         end
       end
-    end
+    }
   end
 end

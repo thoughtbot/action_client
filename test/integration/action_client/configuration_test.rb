@@ -5,8 +5,8 @@ module ActionClient
   class ConfigurationTestCase < ActionClient::IntegrationTestCase
     test "can read configuration values from a file" do
       declare_config "clients/articles.yml", <<~YAML
-      test:
-        url: "https://example.com"
+        test:
+          url: "https://example.com"
       YAML
       client = declare_client "articles_client" do
         default url: configuration.url

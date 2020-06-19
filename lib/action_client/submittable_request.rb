@@ -14,13 +14,13 @@ module ActionClient
 
       ActionClient::Response.new(body, status, headers)
     end
-    alias_method :submit_now, :submit
+    alias submit_now submit
 
     def submit_later(**options)
       @client.submission_job.set(options).perform_later(
         @client.class.name,
         @client.action_name.to_s,
-        *@action_arguments,
+        *@action_arguments
       )
     end
   end

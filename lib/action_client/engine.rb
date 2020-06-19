@@ -16,7 +16,7 @@ module ActionClient
     initializer "action_client.routes" do |app|
       unless Rails.env.production?
         app.routes.prepend do
-          mount ActionClient::Engine => "/rails/action_client", as: :action_client_engine
+          mount ActionClient::Engine => "/rails/action_client", :as => :action_client_engine
         end
       end
     end

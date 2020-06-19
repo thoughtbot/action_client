@@ -1,6 +1,6 @@
 module ActionClient
   module Callbacks
-    SingleArgumentCallback = Struct.new(:status, :headers, :body) do
+    SingleArgumentCallback = Struct.new(:status, :headers, :body) {
       def call(block)
         modified_body = block.call(body).tap do |response|
           if response.nil?
@@ -13,6 +13,6 @@ module ActionClient
 
         [status, headers, modified_body]
       end
-    end
+    }
   end
 end

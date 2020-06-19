@@ -2,7 +2,7 @@ module ActionClient
   class ClientsController < ActionClient::ApplicationController
     def index
       render locals: {
-        clients: ActionClient::Preview.all,
+        clients: ActionClient::Preview.all
       }
     end
 
@@ -11,7 +11,7 @@ module ActionClient
 
       if preview.present?
         render locals: {
-          client: preview,
+          client: preview
         }
       else
         raise AbstractController::ActionNotFound

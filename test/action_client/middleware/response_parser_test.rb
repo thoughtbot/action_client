@@ -8,14 +8,14 @@ module ActionClient
         app = proc do |env|
           [
             200,
-            { Rack::CONTENT_TYPE => "application/json" },
-            env[Rack::RACK_INPUT],
+            {Rack::CONTENT_TYPE => "application/json"},
+            env[Rack::RACK_INPUT]
           ]
         end
         middleware = ActionClient::Middleware::ResponseParser.new(app)
 
         status, headers, body = middleware.call({
-          Rack::RACK_INPUT => payload.lines,
+          Rack::RACK_INPUT => payload.lines
         })
 
         assert_equal({"response" => true}, body)
@@ -26,14 +26,14 @@ module ActionClient
         app = proc do |env|
           [
             200,
-            { Rack::CONTENT_TYPE => "application/xml" },
-            env[Rack::RACK_INPUT],
+            {Rack::CONTENT_TYPE => "application/xml"},
+            env[Rack::RACK_INPUT]
           ]
         end
         middleware = ActionClient::Middleware::ResponseParser.new(app)
 
         status, headers, document = middleware.call({
-          Rack::RACK_INPUT => payload.lines,
+          Rack::RACK_INPUT => payload.lines
         })
 
         assert_equal "node", document.root.name
@@ -46,13 +46,13 @@ module ActionClient
           [
             200,
             {},
-            env[Rack::RACK_INPUT],
+            env[Rack::RACK_INPUT]
           ]
         end
         middleware = ActionClient::Middleware::ResponseParser.new(app)
 
         status, headers, body = middleware.call({
-          Rack::RACK_INPUT => payload.lines,
+          Rack::RACK_INPUT => payload.lines
         })
 
         assert_equal payload, body

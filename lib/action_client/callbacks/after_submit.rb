@@ -15,7 +15,7 @@ module ActionClient
 
           callback.call(block)
         else
-          [ status_code, headers, body ]
+          [status_code, headers, body]
         end
       end
 

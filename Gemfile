@@ -1,4 +1,4 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 # Declare your gem's dependencies in action_client.gemspec.
@@ -16,10 +16,10 @@ gemspec
 
 rails_version = ENV.fetch("RAILS_VERSION", "6.0")
 
-if rails_version == "master"
-  rails_constraint = {github: "rails/rails"}
+rails_constraint = if rails_version == "master"
+  {github: "rails/rails"}
 else
-  rails_constraint = "#{rails_version}.0"
+  "#{rails_version}.0"
 end
 
 gem "rails", rails_constraint

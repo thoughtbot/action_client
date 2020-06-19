@@ -3,11 +3,11 @@ require "active_job_test_case"
 
 module ActionClient
   class SubmitLaterTest < ActionClient::ActiveJobTestCase
-    MetricsClient = Class.new(ActionClient::Base) do
+    MetricsClient = Class.new(ActionClient::Base) {
       def ping(path = "ping", **options)
         get url: "https://example.com/#{path}", query: options
       end
-    end
+    }
 
     MetricsClientJob = Class.new(ActionClient::SubmissionJob)
 

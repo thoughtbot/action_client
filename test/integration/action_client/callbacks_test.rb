@@ -6,11 +6,11 @@ module ActionClient
     test "executes code declared in an after_submit callback" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"error": "failed"}),
-        headers: { "Content-Type": "application/json" },
-        status: 422,
+        headers: {"Content-Type": "application/json"},
+        status: 422
       )
       error_class = Class.new(ArgumentError)
-      client = declare_client do
+      client = declare_client {
         after_submit do |status, _, body|
           if status == 422
             raise error_class, body.fetch("error")
@@ -20,7 +20,7 @@ module ActionClient
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       exception = assert_raises(error_class) { client.create.submit }
 
@@ -30,16 +30,16 @@ module ActionClient
     test "after_submit executes on the body when passed a single argument" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"status": "created"}),
-        headers: { "Content-Type" => "application/json" },
-        status: 201,
+        headers: {"Content-Type" => "application/json"},
+        status: 201
       )
-      client = declare_client do
+      client = declare_client {
         after_submit { |body| body.with_indifferent_access }
 
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       status, headers, body = *client.create.submit
 
@@ -51,22 +51,22 @@ module ActionClient
     test "can modify the response from an after_submit callback" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"status": "created"}),
-        headers: { "Content-Type" => "application/json" },
-        status: 200,
+        headers: {"Content-Type" => "application/json"},
+        status: 200
       )
-      client = declare_client do
+      client = declare_client {
         after_submit do |status, headers, body|
           [
             201,
-            { "Content-Type" => "text/plain" },
-            body.map { |key, value| "#{key}: #{value}" }.join,
+            {"Content-Type" => "text/plain"},
+            body.map { |key, value| "#{key}: #{value}" }.join
           ]
         end
 
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       status, headers, body = *client.create.submit
 
@@ -78,10 +78,10 @@ module ActionClient
     test "executes after_submit callbacks in the order they're declared" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"status": "modified"}),
-        headers: { "Content-Type": "application/json" },
-        status: 200,
+        headers: {"Content-Type": "application/json"},
+        status: 200
       )
-      client = declare_client do
+      client = declare_client {
         after_submit { |status, headers, body| body["status"] = "modified"; [status, headers, body] }
         after_submit { |status, headers, body| [status, headers, body.transform_keys(&:upcase)] }
 
@@ -90,7 +90,7 @@ module ActionClient
             [status, headers, body.with_indifferent_access]
           end
         end
-      end
+      }
 
       response = client.create.submit
 
@@ -100,17 +100,17 @@ module ActionClient
     test "can declare a request-specific after_submit accepting a Rack triplet" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"status": "created"}),
-        headers: { "Content-Type": "application/json" },
-        status: 200,
+        headers: {"Content-Type": "application/json"},
+        status: 200
       )
-      client = declare_client do
+      client = declare_client {
         def create
           post url: "https://example.com/articles" do |status, headers, body|
             body["status"] = "modified"
             [status, headers, body]
           end
         end
-      end
+      }
 
       response = client.create.submit
 
@@ -120,16 +120,16 @@ module ActionClient
     test "can declare a request-specific after_submit accepting the body" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"status": "created"}),
-        headers: { "Content-Type": "application/json" },
-        status: 200,
+        headers: {"Content-Type": "application/json"},
+        status: 200
       )
-      client = declare_client do
+      client = declare_client {
         def create
           post url: "https://example.com/articles" do |body|
             body.with_indifferent_access
           end
         end
-      end
+      }
 
       status, headers, body = *client.create.submit
 
@@ -141,13 +141,13 @@ module ActionClient
     test "does not execute after_submit blocks that don't match the status" do
       stub_request(:post, "https://example.com/articles").and_return(status: 200)
       error_class = Class.new(ArgumentError)
-      client = declare_client do
+      client = declare_client {
         after_submit(with_status: 422) { raise error_class }
 
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       response = client.create.submit
 
@@ -157,17 +157,17 @@ module ActionClient
     test "can declare an after_submit callback matching the status code" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"error": "failed"}),
-        headers: { "Content-Type": "application/json" },
-        status: 422,
+        headers: {"Content-Type": "application/json"},
+        status: 422
       )
       error_class = Class.new(ArgumentError)
-      client = declare_client do
+      client = declare_client {
         after_submit(with_status: 422) { |body| raise error_class, body.fetch("error") }
 
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       exception = assert_raises(error_class) { client.create.submit }
 
@@ -177,11 +177,11 @@ module ActionClient
     test "can match an after_submit callback with a mixture of Numeric and Symbol status codes" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"error": "failed"}),
-        headers: { "Content-Type": "application/json" },
-        status: 401,
+        headers: {"Content-Type": "application/json"},
+        status: 401
       )
       error_class = Class.new(ArgumentError)
-      client = declare_client do
+      client = declare_client {
         after_submit with_status: [:unauthorized, 403] do |body|
           raise error_class, body.fetch("error")
         end
@@ -189,9 +189,9 @@ module ActionClient
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
-      exception = assert_raises(error_class) { client.create.submit}
+      exception = assert_raises(error_class) { client.create.submit }
 
       assert_includes exception.message, "failed"
     end
@@ -199,11 +199,11 @@ module ActionClient
     test "can pass only the body to the block of an after_submit callback declaring a matching status code" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"error": "failed"}),
-        headers: { "Content-Type": "application/json" },
-        status: 422,
+        headers: {"Content-Type": "application/json"},
+        status: 422
       )
       error_class = Class.new(ArgumentError)
-      client = declare_client do
+      client = declare_client {
         after_submit with_status: 422 do |body|
           raise error_class, body.fetch("error")
         end
@@ -211,7 +211,7 @@ module ActionClient
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       exception = assert_raises(error_class) { client.create.submit }
 
@@ -221,11 +221,11 @@ module ActionClient
     test "can after_submit a callback that declares an Array containing the status code" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"error": "failed"}),
-        headers: { "Content-Type": "application/json" },
-        status: 401,
+        headers: {"Content-Type": "application/json"},
+        status: 401
       )
       error_class = Class.new(ArgumentError)
-      client = declare_client do
+      client = declare_client {
         after_submit with_status: [401, 403] do |body|
           raise error_class, body.fetch("error")
         end
@@ -233,7 +233,7 @@ module ActionClient
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       exception = assert_raises(error_class) { client.create.submit }
 
@@ -243,11 +243,11 @@ module ActionClient
     test "can after_submit a callback that decalares a Range of matching status codes" do
       stub_request(:post, "https://example.com/articles").and_return(
         body: %({"error": "failed"}),
-        headers: { "Content-Type": "application/json" },
-        status: 422,
+        headers: {"Content-Type": "application/json"},
+        status: 422
       )
       error_class = Class.new(ArgumentError)
-      client = declare_client do
+      client = declare_client {
         after_submit with_status: 400..500 do |body|
           raise error_class, body.fetch("error")
         end
@@ -255,7 +255,7 @@ module ActionClient
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       exception = assert_raises(error_class) { client.create.submit }
 
@@ -263,7 +263,7 @@ module ActionClient
     end
 
     test "each time a request is submitted, it receives its own middleware stack" do
-      client = declare_client do
+      client = declare_client {
         after_submit { |body| body["callbacks"].push("class"); body }
 
         def create
@@ -283,10 +283,10 @@ module ActionClient
         def all
           get url: "https://example.com/articles"
         end
-      end
+      }
       stub_request(:any, %r{example.com}).to_return(
-        headers: { "Content-Type": "application/json" },
-        body: { callbacks: [] }.to_json,
+        headers: {"Content-Type": "application/json"},
+        body: {callbacks: []}.to_json
       )
 
       create_response = client.create.submit
@@ -302,13 +302,13 @@ module ActionClient
   class CallbackErrorsTest < ActionClient::IntegrationTestCase
     test "raises an exception when the block does not return a triplet" do
       stub_request(:post, "https://example.com/articles")
-      client = declare_client do
+      client = declare_client {
         after_submit { |status, headers, body| body }
 
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       assert_raises ActionClient::AfterSubmitError, /Rack triplet/ do
         client.create.submit
@@ -316,32 +316,32 @@ module ActionClient
     end
 
     test "does not raise an exception when a single argument block returns an Array of 1 item" do
-      client = declare_client do
+      client = declare_client {
         def all
           get url: "https://example.com/articles" do |body|
             body.map(&:symbolize_keys)
           end
         end
-      end
+      }
       stub_request(:get, %r{example.com}).to_return(
-        headers: { "Content-Type": "application/json" },
-        body: [{ id: 1 }].to_json,
+        headers: {"Content-Type": "application/json"},
+        body: [{id: 1}].to_json
       )
 
       response = client.all.submit
 
-      assert_equal [{ id: 1 }], response.body
+      assert_equal [{id: 1}], response.body
     end
 
     test "raises an exception when a single argument block does not return only the body" do
       stub_request(:post, "https://example.com/articles")
-      client = declare_client do
+      client = declare_client {
         after_submit { |body| nil }
 
         def create
           post url: "https://example.com/articles"
         end
-      end
+      }
 
       assert_raises ActionClient::AfterSubmitError, /body/ do
         client.create.submit

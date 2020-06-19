@@ -8,7 +8,7 @@ module ActionClient
           uri = URI("https://www.example.com/articles")
           stub_request(:any, Regexp.new(uri.hostname)).and_return(
             body: %({"responded": true}),
-            status: 201,
+            status: 201
           )
           payload = %({"requested": true})
           adapter = ActionClient::Applications::Net::HttpClient.new
@@ -18,7 +18,7 @@ module ActionClient
             Rack::REQUEST_METHOD => "POST",
             Rack::PATH_INFO => uri.path,
             Rack::RACK_INPUT => StringIO.new(payload),
-            "CONTENT_TYPE" => "application/json",
+            "CONTENT_TYPE" => "application/json"
           )
 
           code, _, body = adapter.call(request.env)
@@ -28,8 +28,8 @@ module ActionClient
           assert_requested :post, uri, {
             body: %({"requested": true}),
             headers: {
-              "Content-Type" => "application/json",
-            },
+              "Content-Type" => "application/json"
+            }
           }
         end
 
@@ -37,7 +37,7 @@ module ActionClient
           uri = URI("https://www.example.com/articles")
           stub_request(:any, Regexp.new(uri.hostname)).and_return(
             body: %({"responded": true}),
-            status: 200,
+            status: 200
           )
           adapter = ActionClient::Applications::Net::HttpClient.new
           request = ActionDispatch::Request.new(
@@ -45,7 +45,7 @@ module ActionClient
             Rack::PATH_INFO => uri.path,
             Rack::RACK_URL_SCHEME => uri.scheme,
             Rack::REQUEST_METHOD => "GET",
-            "CONTENT_TYPE" => "application/json",
+            "CONTENT_TYPE" => "application/json"
           )
 
           code, _, body = adapter.call(request.env)
@@ -54,8 +54,8 @@ module ActionClient
           assert_equal 200, code
           assert_requested :get, uri, {
             headers: {
-              "Content-Type" => "application/json",
-            },
+              "Content-Type" => "application/json"
+            }
           }
         end
       end

@@ -9,9 +9,9 @@ module ActionClient
       Class.new(ActionClient::Base).tap do |client_class|
         if controller_path.present?
           client_class.class_eval <<~RUBY
-          def self.controller_path
-            #{controller_path.inspect}
-          end
+            def self.controller_path
+              #{controller_path.inspect}
+            end
           RUBY
         end
 
