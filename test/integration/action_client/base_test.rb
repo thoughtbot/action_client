@@ -165,7 +165,7 @@ module ActionClient
         end
       }
       article = Article.new("1", nil)
-      declare_template "article_client/destroy.json.erb", <<~JS
+      declare_template "article_client/destroy.json", <<~JS
         {"confirm": true}
       JS
 
@@ -246,6 +246,25 @@ module ActionClient
         {"response" => {"title" => "From Layout"}},
         JSON.parse(request.body.read)
       )
+    end
+
+    test "construacts a JSON request body from a raw template" do
+      client = declare_client("status_client") {
+        default url: "https://example.com"
+
+        def ping
+          post path: "/ping"
+        end
+      }
+      declare_template "status_client/ping.json", <<~JS
+        {"status": "healthy"}
+      JS
+
+      request = client.ping
+
+      assert_equal "https://example.com/ping", request.original_url
+      assert_equal "application/json", request.headers["Content-Type"]
+      assert_equal "healthy", JSON.parse(request.body.read).fetch("status")
     end
 
     test "constructs a request with the full URL passed as an option" do

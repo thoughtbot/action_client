@@ -105,15 +105,22 @@ module ActionClient
 
       if lookup_context.any_templates?(template_name, prefixes)
         template = lookup_context.find_template(template_name, prefixes)
-        format = (
-          if template.respond_to?(:format)
-            template.format
-          else
-            template.formats.first
-          end
-        ) || :json
-        content_type = Mime[format].to_s
-        body = render(template: template.virtual_path, formats: format, **options)
+
+        format = if template.handler.is_a?(ActionView::Template::Handlers::Raw)
+          identifier = template.identifier
+          extension = File.extname(identifier)
+          extension.delete_prefix(".")
+        elsif template.respond_to?(:format)
+          template.format
+        else
+          template.formats.first
+        end
+
+        mime_type = Mime[format]
+        if mime_type.present?
+          content_type = mime_type.to_s
+        end
+        body = render(template: template.virtual_path, **options)
       else
         content_type = headers[Rack::CONTENT_TYPE]
         body = ""

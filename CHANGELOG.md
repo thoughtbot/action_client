@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add support for inferring `Content-Type` based on the extension of raw
+  templates (e.g. `articles_client/create.json`) (added by [@seanpdoyle[]])
+
 - Change development branch to `main` (added by [@seanpdoyle][])
 
 - Integrate with `ActiveJob` by declaring
