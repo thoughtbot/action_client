@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Change development branch to `main` (added by [@seanpdoyle][])
+
 - Integrate with `ActiveJob` by declaring
   `ActionClient::SubmittableRequest#submit_later`. To declare background job
   customizations, set `ActionClient::Base.submission_job` to a descendant of

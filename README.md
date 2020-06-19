@@ -439,7 +439,7 @@ command][curl].
 Add this line to your application's Gemfile:
 
 ```ruby
-gem "action_client", github: "thoughtbot/action_client"
+gem "action_client", github: "thoughtbot/action_client", branch: "main"
 ```
 
 And then execute:
