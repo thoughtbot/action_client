@@ -13,7 +13,7 @@ module ActionClient
 
     test "#submit_later enqueues a Job with arguments and options" do
       stub_request(:get, "https://example.com/special-ping?status=special")
-      request = MetricsClient.ping("special-ping", status: :special)
+      request = MetricsClient.ping("special-ping", status: "special")
 
       perform_enqueued_jobs { request.submit_later }
 
@@ -29,16 +29,16 @@ module ActionClient
     end
 
     test "#submit_later forwards options along when scheduling the ActiveJob::Job" do
-      MetricsClient.ping.submit_later(queue: "requests")
-
-      assert_enqueued_with job: ActionClient::SubmissionJob, queue: "requests"
+      assert_enqueued_with job: ActionClient::SubmissionJob, queue: "requests" do
+        MetricsClient.ping.submit_later(queue: "requests")
+      end
     end
 
     test "#submit_later enqueues a different job class" do
       with_submission_job MetricsClient, MetricsClientJob do
-        MetricsClient.ping.submit_later
-
-        assert_enqueued_with(job: MetricsClientJob)
+        assert_enqueued_with(job: MetricsClientJob) do
+          MetricsClient.ping.submit_later
+        end
       end
     end
   end

@@ -29,7 +29,9 @@ module ActionClient
         configuration_path = config_path.join("clients", client_name + ".yml")
 
         if configuration_path.exist?
-          Rails.application.config_for(configuration_path)
+          ActiveSupport::InheritableOptions.new(
+            Rails.application.config_for(configuration_path).deep_symbolize_keys
+          )
         else
           ActiveSupport::OrderedOptions.new
         end
@@ -59,6 +61,10 @@ module ActionClient
         else
           super
         end
+      end
+
+      def respond_to_missing?(method_name, *arguments)
+        action_methods.include?(method_name) || super
       end
     end
 
@@ -99,7 +105,13 @@ module ActionClient
 
       if lookup_context.any_templates?(template_name, prefixes)
         template = lookup_context.find_template(template_name, prefixes)
-        format = template.format || :json
+        format = (
+          if template.respond_to?(:format)
+            template.format
+          else
+            template.formats.first
+          end
+        ) || :json
         content_type = Mime[format].to_s
         body = render(template: template.virtual_path, formats: format, **options)
       else

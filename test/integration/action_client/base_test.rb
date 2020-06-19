@@ -165,7 +165,7 @@ module ActionClient
         end
       end
       article = Article.new("1", nil)
-      declare_template "article_client/destroy.json", <<~JS
+      declare_template "article_client/destroy.json.erb", <<~JS
       {"confirm": true}
       JS
 

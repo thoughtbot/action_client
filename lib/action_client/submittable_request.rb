@@ -19,7 +19,7 @@ module ActionClient
     def submit_later(**options)
       @client.submission_job.set(options).perform_later(
         @client.class.name,
-        @client.action_name,
+        @client.action_name.to_s,
         *@action_arguments,
       )
     end

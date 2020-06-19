@@ -5,7 +5,13 @@ module ActionClient
     end
 
     def include?(matching_status)
-      status_codes.include? to_code(matching_status)
+      code = to_code(matching_status)
+
+      if status_codes.respond_to?(:cover?)
+        status_codes.cover? code
+      else
+        status_codes.include? code
+      end
     end
 
     private

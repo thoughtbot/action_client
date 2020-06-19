@@ -19,7 +19,13 @@ require "action_client"
 module Dummy
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.0
+    config.load_defaults (
+      if ENV["RAILS_VERSION"] == "master"
+        6.1
+      else
+        ENV.fetch("RAILS_VERSION", 6.0).to_f
+      end
+    )
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers
@@ -27,4 +33,3 @@ module Dummy
     # the framework and any gems in your application.
   end
 end
-
