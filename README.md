@@ -448,7 +448,15 @@ $ bundle
 ```
 
 ## Contributing
-Contribution directions go here.
+
+This project's Ruby code is linted by [standard][]. New code that is added
+through Pull Requests cannot include any linting violations.
+
+To helper ensure that your contributions don't contain any violations, please
+consider [integrating Standard into your editor workflow][].
+
+[standard]: https://github.com/testdouble/standard
+[standard-editor]: https://github.com/testdouble/standard#how-do-i-run-standard-in-my-editor
 
 ## License
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

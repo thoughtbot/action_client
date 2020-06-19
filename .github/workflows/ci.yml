@@ -46,3 +46,4 @@ jobs:
       run: |
         bin/setup
         bin/rails test
+        bundle exec standardrb --no-fix

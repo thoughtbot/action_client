@@ -24,6 +24,10 @@ end
 
 gem "rails", rails_constraint
 
+group :development, :test do
+  gem "standard"
+end
+
 group :test do
   gem "minitest-around", require: "minitest/around/unit"
   gem "webmock", require: "webmock/minitest"
