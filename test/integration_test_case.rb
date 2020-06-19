@@ -8,7 +8,7 @@ module ActionClient
     def declare_client(controller_path = nil, &block)
       Class.new(ActionClient::Base).tap do |client_class|
         if controller_path.present?
-          client_class.class_eval <<~RUBY
+          client_class.class_eval <<~RUBY, __FILE__, __LINE__ + 1
             def self.controller_path
               #{controller_path.inspect}
             end

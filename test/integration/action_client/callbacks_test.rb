@@ -82,8 +82,13 @@ module ActionClient
         status: 200
       )
       client = declare_client {
-        after_submit { |status, headers, body| body["status"] = "modified"; [status, headers, body] }
-        after_submit { |status, headers, body| [status, headers, body.transform_keys(&:upcase)] }
+        after_submit do |status, headers, body|
+          body["status"] = "modified"
+          [status, headers, body]
+        end
+        after_submit do |status, headers, body|
+          [status, headers, body.transform_keys(&:upcase)]
+        end
 
         def create
           post url: "https://example.com/articles" do |status, headers, body|
@@ -264,7 +269,10 @@ module ActionClient
 
     test "each time a request is submitted, it receives its own middleware stack" do
       client = declare_client {
-        after_submit { |body| body["callbacks"].push("class"); body }
+        after_submit do |body|
+          body["callbacks"].push("class")
+          body
+        end
 
         def create
           post url: "https://example.com/articles" do |body|

@@ -8,13 +8,13 @@ module ActionClient
         test:
           url: "https://example.com"
       YAML
-      client = declare_client "articles_client" do
+      client = declare_client("articles_client") {
         default url: configuration.url
 
         def all
           get path: "articles"
         end
-      end
+      }
 
       request = client.all
 
@@ -22,13 +22,13 @@ module ActionClient
     end
 
     test "defaults to an empty configuration when a file is not present" do
-      client = declare_client "articles_client" do
+      client = declare_client("articles_client") {
         default url: configuration.url || "https://example.com"
 
         def all
           get path: "articles"
         end
-      end
+      }
 
       request = client.all
 

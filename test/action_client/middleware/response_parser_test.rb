@@ -14,7 +14,7 @@ module ActionClient
         end
         middleware = ActionClient::Middleware::ResponseParser.new(app)
 
-        status, headers, body = middleware.call({
+        *, body = middleware.call({
           Rack::RACK_INPUT => payload.lines
         })
 
@@ -32,7 +32,7 @@ module ActionClient
         end
         middleware = ActionClient::Middleware::ResponseParser.new(app)
 
-        status, headers, document = middleware.call({
+        *, document = middleware.call({
           Rack::RACK_INPUT => payload.lines
         })
 
@@ -51,7 +51,7 @@ module ActionClient
         end
         middleware = ActionClient::Middleware::ResponseParser.new(app)
 
-        status, headers, body = middleware.call({
+        *, body = middleware.call({
           Rack::RACK_INPUT => payload.lines
         })
 

@@ -49,7 +49,7 @@ module ActionClient
     end
 
     test "constructs a POST request with a JSON body declared with instance variables" do
-      client = declare_client "article_client" do
+      client = declare_client("article_client") {
         default url: "https://example.com"
 
         def create(article:)
@@ -57,7 +57,7 @@ module ActionClient
 
           post path: "/articles"
         end
-      end
+      }
       declare_template "article_client/create.json.erb", <<~ERB
         <%= { title: @article.title }.to_json %>
       ERB
@@ -157,13 +157,13 @@ module ActionClient
     end
 
     test "constructs a DELETE request with a JSON body template" do
-      client = declare_client "article_client" do
+      client = declare_client("article_client") {
         default url: "https://example.com"
 
         def destroy(article:)
           delete path: "/articles/#{article.id}"
         end
-      end
+      }
       article = Article.new("1", nil)
       declare_template "article_client/destroy.json.erb", <<~JS
         {"confirm": true}
@@ -178,7 +178,7 @@ module ActionClient
     end
 
     test "constructs a PUT request with a JSON body declared with locals" do
-      client = declare_client "article_client" do
+      client = declare_client("article_client") {
         default url: "https://example.com"
 
         def update(article:)
@@ -186,7 +186,7 @@ module ActionClient
             article: article
           }
         end
-      end
+      }
       declare_template "article_client/update.json.erb", <<~ERB
         <%= { title: article.title }.to_json %>
       ERB
@@ -201,7 +201,7 @@ module ActionClient
     end
 
     test "constructs a PATCH request with an XML body declared with locals" do
-      client = declare_client "article_client" do
+      client = declare_client("article_client") {
         default url: "https://example.com"
 
         def update(article:)
@@ -209,7 +209,7 @@ module ActionClient
             article: article
           }
         end
-      end
+      }
       declare_template "article_client/update.xml.erb", <<~ERB
         <xml><%= article.title %></xml>
       ERB
@@ -224,14 +224,14 @@ module ActionClient
     end
 
     test "constructs a request with a body wrapped by a layout" do
-      client = declare_client "article_client" do
+      client = declare_client("article_client") {
         def create(article:)
           post \
             layout: "article_client",
             locals: {article: article},
             url: "https://example.com/special/articles"
         end
-      end
+      }
       declare_template "layouts/article_client.json.erb", <<~ERB
         { "response": <%= yield %> }
       ERB
@@ -428,13 +428,13 @@ module ActionClient
     end
 
     test "#submit makes an appropriate HTTP request" do
-      client = declare_client "article_client" do
+      client = declare_client("article_client") {
         default url: "https://example.com"
 
         def create(article:)
           post path: "/articles", locals: {article: article}
         end
-      end
+      }
       declare_template "article_client/create.json.erb", <<~ERB
         <%= { title: article.title }.to_json %>
       ERB
@@ -456,13 +456,13 @@ module ActionClient
     end
 
     test "#submit parses a JSON response based on the `Content-Type`" do
-      client = declare_client "article_client" do
+      client = declare_client("article_client") {
         default url: "https://example.com"
 
         def create(article:)
           post path: "/articles", locals: {article: article}
         end
-      end
+      }
       declare_template "article_client/create.json.erb", <<~ERB
         {"title": "<%= article.title %>"}
       ERB
@@ -481,13 +481,13 @@ module ActionClient
     end
 
     test "#submit parses an XML response based on the `Content-Type`" do
-      client = declare_client "article_client" do
+      client = declare_client("article_client") {
         default url: "https://example.com"
 
         def create(article:)
           post path: "/articles", locals: {article: article}
         end
-      end
+      }
       declare_template "article_client/create.xml.erb", <<~ERB
         <article title="<%= article.title %>"></article>
       ERB
