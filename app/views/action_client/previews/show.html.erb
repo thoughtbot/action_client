@@ -10,13 +10,17 @@
   cURL
 </h2>
 
-<pre>
+<pre id="curl">
 curl \
   --request <%= preview.request.request_method %> \
   <% ActionClient::Utils.headers_to_hash(preview.request.headers).each do |key, value| %>
- --header "<%= key %>: <%= value %>" \
+  --header "<%= key %>: <%= value %>" \
   <% end %>
-  --data '<%= preview.request.body.read.strip %>' \
+<% preview.request.body.read.strip.tap do |data| %>
+  <% if data.present? %>
+  --data '<%= data %>' \
+  <% end %>
+<% end %>
   <%= preview.request.original_url %>
 </pre>
 
@@ -38,11 +42,11 @@ curl \
   <% end %>
 </pre>
 
+
+<% if preview.request.body.any? %>
 <h2>
   Body
 </h2>
-
-<% if preview.request.body.any? %>
   <pre id="body"><%=
     JSON.pretty_generate(JSON.parse(preview.request.body.read))
   %></pre>

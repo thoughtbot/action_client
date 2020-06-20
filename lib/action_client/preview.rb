@@ -32,7 +32,9 @@ module ActionClient
       end
 
       def action_methods
-        client_class.action_methods
+        client_class.action_methods.select do |action_name|
+          instance_methods.map(&:to_s).include?(action_name)
+        end
       end
 
       def to_param

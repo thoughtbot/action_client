@@ -10,11 +10,19 @@ module ActionClient
       def create(title:)
         post url: "https://example.com/articles", locals: {title: title}
       end
+
+      def all
+        get url: "https://example.com/articles"
+      end
     end
 
     class ArticlesClientPreview < ActionClient::Preview
       def create
         ArticleClient.create(title: "Hello, World")
+      end
+
+      def all
+        ArticleClient.all
       end
     end
 
@@ -37,6 +45,12 @@ module ActionClient
       get client_preview_path(ArticlesClientPreview.preview_name, "create")
 
       assert_select "#body", count: 0
+    end
+
+    test "action_client/previews omits --data from cURL command when template is not declared" do
+      get client_preview_path(ArticlesClientPreview.preview_name, "all")
+
+      assert_not_includes css_select("#curl").text, "--data"
     end
   end
 end
