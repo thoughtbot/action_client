@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add support for extending how the Response middleware parses body strings
+  (added by [@seanpdoyle][])
+
 - Merge descendant `default headers: {}` declarations into inherited values
   (added by [@seanpdoyle][])
 

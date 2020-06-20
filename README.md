@@ -105,14 +105,6 @@ through a stack of [Rack middleware][rack].
 The return value is an instance of a [`Rack::Response`][Rack::Response], which
 responds to `#status`, `#headers`, and `#body`.
 
-When `ActionClient` is able to infer the request's `Content-Type` to be either
-`JSON` or `XML`, it will parse the returned `body` value ahead of time.
-
-Requests make with `application/json` will be parsed into [`Hash`
-instances][ruby-hash] by [`JSON.parse`][json-parse], and requests made with
-`application/xml` will be parsed into [`Nokogiri::XML::Document`
-instances][nokogiri-document] by [`Nokogiri::XML`][nokogiri-xml].
-
 If you'd prefer to deal with the [Rack status-headers-body
 triplet][rack-triplet] directly, you can coerce the
 [`Rack::Response`][Rack::Response] into an `Array` for multiple assignment by
@@ -124,10 +116,52 @@ request = ArticlesClient.create(title: "Hello, World")
 status, headers, body = *request.submit
 ```
 
+### Response body parsing
+
+When `ActionClient` is able to infer the request's `Content-Type` to be either
+JSON, [JSON-LD][], or XML, it will parse the returned `body` value ahead of
+time.
+
+Responses with `Content-Type: application/json` headers will be parsed into
+Ruby objects by [`JSON.parse`][json-parse]. JSON objects will
+become instances of
+[`HashWithIndifferentAccess`][HashWithIndifferentAccess], so that keys can be
+accessed via `Symbol` or  `String`.
+
+Responses with `Content-Type: application/xml` headers will be parsed into
+[`Nokogiri::XML::Document` instances][nokogiri-document] by
+[`Nokogiri::XML`][nokogiri-xml].
+
+If the response body is invalid JSON or XML, `#submit` will raise an
+`ActionClient::ParseError`. You can `rescue` from this exception specifically,
+then access both the original response `#body` and the `#content_type` from the
+instance:
+
+```ruby
+def fetch_articles
+  response = ArticlesClient.all.submit
+
+  # ...
+
+  response.body.map { |attributes| Article.new(attributes) }
+rescue ActionClient::ParseError => error
+  Rails.logger.warn "Failed to parse body: #{error.body}. Falling back to empty result set"
+
+  []
+end
+```
+
+It's important to note that parsing occurs before any other middlewares declared
+in `ActionClient::Base` descendants. If your invocation `rescue` block catches
+an exception, none of the middlewares would have been run at that point in the
+execution.
+
+[JSON-LD]: https://json-ld.org/
 [rack]: https://github.com/rack/rack
 [Rack::Response]: https://www.rubydoc.info/gems/rack/Rack/Response
 [rack-triplet]: https://github.com/rack/rack/blob/master/SPEC.rdoc#the-response-
 [json-parse]: https://ruby-doc.org/stdlib-2.6.3/libdoc/json/rdoc/JSON.html#method-i-parse
+[HashWithIndifferentAccess]: https://api.rubyonrails.org/classes/ActiveSupport/HashWithIndifferentAccess.html
 [ruby-hash]: https://ruby-doc.org/core-2.7.1/Hash.html
 [nokogiri-xml]: https://nokogiri.org/rdoc/Nokogiri.html#XML-class_method
 [nokogiri-document]: https://nokogiri.org/rdoc/Nokogiri/XML/Document.html
@@ -297,6 +331,26 @@ When a matching configuration file does not exist,
 [`ActiveSupport::OrderedOptions`][OrderedOptions].
 
 [OrderedOptions]: https://api.rubyonrails.org/classes/ActiveSupport/OrderedOptions.html
+
+#### Configuring `config.action_client.parser`
+
+By default, `ActionClient` will parse each response's body `String` based on the
+value of the `Content-Type` header. Out of the box, `ActionClient` supports
+parsing `application/json` and `application/xml` headers.
+
+This feature is powered by an extensible set of configurations. If you'd like to
+declare additional parsers for other `Content-Type` values, or you'd like to
+override the existing parsers, declare a `Hash` mapping from `Content-Type`
+values to callable blocks that accept a single String argument containing the
+response's body `String`:
+
+```ruby
+# config/application.rb
+
+config.action_client.parsers = {
+  "text/plain": -> (body) { body.strip },
+}
+```
 
 ### Declaring `after_submit` callbacks
 

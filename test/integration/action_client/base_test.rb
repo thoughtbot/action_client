@@ -511,6 +511,32 @@ module ActionClient
       assert_equal({"title" => article.title, "id" => 1}, response.body)
     end
 
+    test "#submit parses a JSON-LD response based on the `Content-Type`" do
+      title = "Article title"
+      client = declare_client("article_client") {
+        default url: "https://example.com"
+
+        def create(title:)
+          post path: "/articles", locals: {title: title}
+        end
+      }
+      declare_template "article_client/create.jsonld.erb", <<~ERB
+        {"title": "<%= title %>"}
+      ERB
+      stub_request(:post, %r{example.com}).and_return(
+        body: {"title": title, id: 1}.to_json,
+        headers: {"Content-Type": "application/ld+json"},
+        status: 201
+      )
+
+      response = client.create(title: title).submit
+
+      assert_equal 201, response.status
+      assert_equal "application/ld+json", response["Content-Type"]
+      assert_equal title, response.body.fetch("title")
+      assert_equal 1, response.body.fetch("id")
+    end
+
     test "#submit parses an XML response based on the `Content-Type`" do
       client = declare_client("article_client") {
         default url: "https://example.com"
@@ -535,6 +561,25 @@ module ActionClient
       assert_equal "application/xml", response["Content-Type"]
       assert_equal article.title, response.body.root["title"]
       assert_equal "1", response.body.root["id"]
+    end
+
+    test "integrates with config.action_client.parser" do
+      override_configuration(Rails.configuration.action_client) do |config|
+        config.parsers = {"text/plain": ->(body) { body.strip }}
+        client = declare_client {
+          def all
+            get url: "https://example.com/articles"
+          end
+        }
+        stub_request(:get, "https://example.com/articles").and_return(
+          headers: {"Content-Type": "text/plain"},
+          body: " response "
+        )
+
+        response = client.all.submit
+
+        assert_equal "response", response.body
+      end
     end
   end
 end
