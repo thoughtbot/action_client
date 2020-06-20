@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `ActionClient::TestHelpers` module to support assertions about ActiveJob
+  integration (added by [@seanpdoyle][])
+
 - Add support for `except_status:` to omit execution of an `after_perform` hook
   for an `ActionClient::SubmissionJob` descendant (added by [@seanpdoyle][])
 

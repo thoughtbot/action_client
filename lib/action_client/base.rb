@@ -22,6 +22,7 @@ module ActionClient
       instance_accessor: true,
       default: ActionClient::SubmissionJob
 
+    attr_reader :action_arguments
     attr_reader :response
 
     class << self
@@ -203,8 +204,15 @@ module ActionClient
         @middleware,
         request.env,
         client: self,
-        action_arguments: @action_arguments,
         &block
+      )
+    end
+
+    def enqueue_job(**options)
+      submission_job.set(options).perform_later(
+        self.class.name,
+        action_name,
+        *action_arguments
       )
     end
 

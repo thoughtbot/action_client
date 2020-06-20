@@ -1,10 +1,11 @@
 module ActionClient
   class SubmittableRequest < ActionDispatch::Request
-    def initialize(stack, env, client:, action_arguments:, &block)
+    attr_reader :client
+
+    def initialize(stack, env, client:, &block)
       super(env)
       @stack = stack
       @client = client
-      @action_arguments = action_arguments
       @block = block
     end
 
@@ -16,11 +17,7 @@ module ActionClient
     alias submit_now submit
 
     def submit_later(**options)
-      @client.submission_job.set(options).perform_later(
-        @client.class.name,
-        @client.action_name.to_s,
-        *@action_arguments
-      )
+      client.enqueue_job(options)
     end
   end
 end

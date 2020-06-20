@@ -632,6 +632,108 @@ config.action_client.enable_previews = true
 config.action_client.previews_path = "spec/previews/clients"
 ```
 
+## Testing
+
+To integrate `ActionClient`-provided assertions into your tests, include the
+`ActionClient::TestHelpers` module:
+
+```ruby
+# test/controllers/articles_controller_test.rb
+class ArticlesControllerTest < ActionDispatch::IntegrationTest
+  include ActionClient::TestHelpers
+
+  # ...
+end
+```
+
+### ActiveJob Assertions
+
+`ActionClient` provides a collection of assertions to verify that
+requests processed by invoking `#submit_later` are enqueued or performed.
+
+Inspired by the [Rails-provided `ActiveJob::TestHelper`
+assertions][ActiveJob::TestHelper], `ActionClient` assertions verify that a
+request has been performed, or been enqueued to be performed by a background
+job.
+
+When [`config.active_job.queue_adapter = :test`][test-adapter]:
+
+* `assert_enqueued_request(request, **options, &block)`
+* `assert_no_enqueued_requests(client_class, **options, &block)`
+
+```ruby
+# wrap the test's Exercise Phase
+test "#create enqueues a request to the Articles API" do
+  assert_enqueued_request ArticlesClient.create(title: "Hello, World")) do
+    post articles_path(params: { article: { title: "Hello, World" } })
+  end
+end
+
+# or assert after the test's Exercise Phase (requires Rails >= 6.0)
+test "#create enqueues a request to the Articles API" do
+  post articles_path(params: { article: { title: "Hello, World" } })
+
+  assert_enqueued_request ArticlesClient.create(title: "Hello, World"))
+end
+
+# wrap the test's Exercise Phase
+test "#create does not enqueue a request to the Articles API when invalid" do
+  assert_no_enqueued_requests ArticlesClient do
+    post articles_path(params: { article: { title: "" } })
+  end
+end
+
+# or assert after the test's Exercise Phase (requires Rails >= 6.0)
+test "#create does not enqueue a request to the Articles API when invalid" do
+  post articles_path(params: { article: { title: "" } })
+
+  assert_no_enqueued_requests ArticlesClient
+end
+```
+
+When [`config.active_job.queue_adapter = :inline`][inline-adapter]:
+
+* `assert_performed_request(request, **options, &block)`
+* `assert_no_performed_requests(client_class, **options, &block)`
+
+```ruby
+# wrap the test's Exercise Phase
+test "#create enqueues a request to the Articles API" do
+  assert_performed_request ArticlesClient.create(title: "Hello, World")) do
+    post articles_path(params: { article: { title: "Hello, World" } })
+  end
+end
+
+# or assert after test's the Exercise Phase
+test "#create enqueues a request to the Articles API" do
+  perform_enqueued_jobs do
+    post articles_path(params: { article: { title: "Hello, World" } })
+
+    assert_performed_request ArticlesClient.create(title: "Hello, World"))
+  end
+end
+
+# wrap the test's Exercise Phase
+test "#create does not enqueue a request to the Articles API when invalid" do
+  assert_no_performed_requests ArticlesClient do
+    post articles_path(params: { article: { title: "" } })
+  end
+end
+
+# or assert after test's the Exercise Phase
+test "#create does not enqueue a request to the Articles API when invalid" do
+  perform_enqueued_jobs do
+    post articles_path(params: { article: { title: "" } })
+
+    assert_no_performed_requests ArticlesClient
+  end
+end
+```
+
+[ActiveJob::TestHelper]: https://api.rubyonrails.org/classes/ActiveJob/TestHelper.html
+[test-adapter]: https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/TestAdapter.html
+[inline-adapter]: https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/InlineAdapter.html
+
 ## Installation
 Add this line to your application's Gemfile:
 
@@ -650,7 +752,7 @@ This project's Ruby code is linted by [standard][]. New code that is added
 through Pull Requests cannot include any linting violations.
 
 To helper ensure that your contributions don't contain any violations, please
-consider [integrating Standard into your editor workflow][].
+consider [integrating Standard into your editor workflow][standard-editor].
 
 [standard]: https://github.com/testdouble/standard
 [standard-editor]: https://github.com/testdouble/standard#how-do-i-run-standard-in-my-editor
