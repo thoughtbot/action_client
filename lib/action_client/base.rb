@@ -171,7 +171,7 @@ module ActionClient
         if mime_type.present?
           content_type = mime_type.to_s
         end
-        body = render(template: template.virtual_path, **options)
+        body = template.render(options)
       else
         content_type = headers[Rack::CONTENT_TYPE]
         body = ""
