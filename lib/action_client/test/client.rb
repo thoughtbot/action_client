@@ -9,7 +9,7 @@ module ActionClient
 
       def initialize(request, status)
         @request = request
-        @response = ActionDispatch::Response.new
+        @response = ActionClient::Response.new
         @status = status
       end
 

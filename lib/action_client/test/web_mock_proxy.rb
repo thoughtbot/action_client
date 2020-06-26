@@ -43,10 +43,10 @@ module ActionClient
 
         client.process(@request.client.action_name, *@arguments, **locals)
 
-        status, headers, rack_body = *client.response
+        status, headers, body = *client.response
 
         options[:status] = status
-        options[:body] = rack_body.body
+        options[:body] = body
         options[:headers] ||= {}
         options[:headers].with_defaults!(headers)
 
