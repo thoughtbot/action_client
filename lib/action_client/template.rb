@@ -13,13 +13,14 @@ module ActionClient
           [],
           variants: variants
         )
-        new(template, renderer)
+        new(template, renderer, variants)
       end
     end
 
-    def initialize(template, renderer)
+    def initialize(template, renderer, variants)
       @template = template
       @renderer = renderer
+      @variants = Array(variants)
     end
 
     def render(**options)
@@ -48,5 +49,6 @@ module ActionClient
 
     attr_reader :renderer
     attr_reader :template
+    attr_reader :variants
   end
 end
