@@ -154,7 +154,7 @@ module ActionClient
 
       headers = headers.to_h.with_defaults(defaults.headers.to_h)
 
-      template = ActionClient::Template.find(lookup_context, self)
+      template = ActionClient::Template.find(self)
 
       if template.present?
         format = if template.handler.is_a?(ActionView::Template::Handlers::Raw)
