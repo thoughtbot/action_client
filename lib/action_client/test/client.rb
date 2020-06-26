@@ -18,7 +18,7 @@ module ActionClient
       end
 
       def process(action_name, *arguments, **options)
-        status_code = Rack::Utils.status_code(@status)
+        status_code = Rack::Utils.status_code(status)
         template = ActionClient::Template.find(
           request.client,
           renderer: self,
@@ -37,12 +37,16 @@ module ActionClient
 
         content_type = request.content_type.presence || template.content_type
 
-        response.status = Rack::Utils.status_code(@status)
+        response.status = status_code
         response.headers[Rack::CONTENT_TYPE] = content_type
         response.body = template.render(locals: locals)
 
         self
       end
+
+      private
+
+      attr_reader :status
     end
   end
 end
