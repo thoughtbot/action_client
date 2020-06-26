@@ -154,11 +154,9 @@ module ActionClient
 
       headers = headers.to_h.with_defaults(defaults.headers.to_h)
 
-      prefixes = Array(controller_path)
+      template = ActionClient::Template.find(lookup_context, self)
 
-      if lookup_context.any_templates?(action_name, prefixes)
-        template = lookup_context.find_template(action_name, prefixes)
-
+      if template.present?
         format = if template.handler.is_a?(ActionView::Template::Handlers::Raw)
           identifier = template.identifier
           extension = File.extname(identifier)

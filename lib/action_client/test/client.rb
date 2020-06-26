@@ -24,14 +24,12 @@ module ActionClient
           Rack::Utils::SYMBOL_TO_STATUS_CODE.invert[status_code]
         ]
 
-        prefixes = Array(controller_path)
-        template = lookup_context.find_template(
-          action_name,
-          prefixes,
-          false,
-          [],
+        template = ActionClient::Template.find(
+          lookup_context,
+          request.client,
           variants: variants
         )
+
         format = (
           if template.respond_to?(:format)
             template.format
