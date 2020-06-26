@@ -1,7 +1,7 @@
 Description:
 ============
     Generates a new action client along with its view directory, config file,
-    and preview class. Accepts the mailer name, either CamelCased or
+    and preview class. Accepts the client name, either CamelCased or
     under_scored, and an optional list of actions as arguments.
 
 Example:

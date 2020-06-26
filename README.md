@@ -734,6 +734,28 @@ end
 [test-adapter]: https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/TestAdapter.html
 [inline-adapter]: https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/InlineAdapter.html
 
+## Generator
+
+Action Client comes with a Rails generator to set up the main files you will
+need for your client. To use the generator, run:
+
+```sh
+bin/rails generate action_client NAME [action action action]
+```
+
+For example:
+
+```sh
+bin/rails generate action_client articles create show
+```
+
+This will create the `ArticlesClient` class, as well as the view directory, the
+config file, and the `ArticlesClientPreview` class. Both the client and preview
+classes will have methods defined for the `create` and `show` actions.
+
+`NAME` can be passed in CamelCase or snake_case, with or without the "client"
+prefix: e.g. "articles, "Articles", "articles_client", or "ArticlesClient".
+
 ## Installation
 Add this line to your application's Gemfile:
 
