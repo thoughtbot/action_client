@@ -6,6 +6,7 @@ module ActionClient
       prefixes = Array(client.controller_path)
 
       if renderer.lookup_context.any_templates?(client.action_name, prefixes)
+        variants = variants.map(&:to_s)
         template = renderer.lookup_context.find_template(
           client.action_name,
           prefixes,
@@ -30,18 +31,10 @@ module ActionClient
     end
 
     def content_type
-      if (mime_type = Mime[format])
-        mime_type.to_s
-      end
-    end
+      mime_type = Mime[format]
 
-    def format
-      if template.respond_to?(:format)
-        template.format
-      elsif handler.is_a?(ActionView::Template::Handlers::Raw)
-        File.extname(identifier).delete_prefix(".")
-      else
-        formats.first
+      if mime_type.present?
+        mime_type.to_s
       end
     end
 
@@ -50,5 +43,15 @@ module ActionClient
     attr_reader :renderer
     attr_reader :template
     attr_reader :variants
+
+    def format
+      template.try(:format) || (
+        if handler.is_a?(ActionView::Template::Handlers::Raw)
+          File.extname(identifier).delete_prefix(".")
+        else
+          formats.first
+        end
+      )
+    end
   end
 end
