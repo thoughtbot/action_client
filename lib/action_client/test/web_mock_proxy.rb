@@ -1,6 +1,8 @@
 module ActionClient
   module Test
-    class WebMockProxy < SimpleDelegator
+    class WebMockProxy
+      delegate_missing_to :webmock
+
       def self.stub_request(request)
         request_method = request.method.downcase.to_sym
         request_body = request.body.read
@@ -15,7 +17,7 @@ module ActionClient
       end
 
       def initialize(webmock, request)
-        super(webmock)
+        @webmock = webmock
         @request = request
       end
 
@@ -51,8 +53,7 @@ module ActionClient
       private
 
       attr_reader :request
-
-      alias webmock __getobj__
+      attr_reader :webmock
     end
   end
 end
