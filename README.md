@@ -743,10 +743,27 @@ Then, reference those values in the fixture template:
 { "id": 1, "title": "<%= title %>" }
 ```
 
-By default, the request options will be made available as template-local
-variables. For example, a call to `stub_request(ArticlesClient.create(title: "My
-Title"))` will result in a `title` template-local variable with the value of `"My
-Title"`.
+By default, the request's arguments and  options will be made available as
+template-local variables. For example, consider a call to `stub_request`:
+
+```ruby
+stub_request(ArticlesClient.create("My Title", published: false)).to_fixture
+```
+
+The request's arguments are available within the fixture template:
+
+```json+erb
+<%# test/client/fixtures/articles_client/create.json.erb %>
+{ "id": 1, "title": "<%= arguments.first %>", "published": published }
+```
+
+Similar to the availability of the `arguments` template-local variable, the
+`options` are accessible as well:
+
+```json+erb
+<%# test/client/fixtures/articles_client/create.json.erb %>
+<%= options.merge("id": 1, "title": "<%= arguments.first %>").to_json %>
+```
 
 Declaring different fixture templates for different [HTTP Status
 Codes][mdn-http-status], leveraging the power of Rails' [`ActionPack`

@@ -270,7 +270,7 @@ module ActionClient
 
     test "passes request arguments to fixtures as template-local variables" do
       client = declare_client("articles_client") {
-        def create(title:)
+        def create(title:, published:)
           post url: "https://example.com/articles", locals: {title: title}
         end
       }
@@ -278,17 +278,18 @@ module ActionClient
         <%= { title: title }.to_json %>
       ERB
       declare_fixture "articles_client/create.json.erb", <<~ERB
-        <%= { id: 1, title: options[:title] }.to_json %>
+        <%= { id: 1, title: options[:title], published: published }.to_json %>
       ERB
 
-      stub_request(client.create(title: "Argument Title")).to_fixture(
+      stub_request(client.create(title: "Argument Title", published: false)).to_fixture(
         status: 200
       )
 
-      response = client.create(title: "Argument Title").submit
+      response = client.create(title: "Argument Title", published: false).submit
 
       assert_equal 1, response.body.fetch("id")
       assert_equal "Argument Title", response.body.fetch("title")
+      assert_equal false, response.body.fetch("published")
     end
 
     test "merges request arguments with fixtures local variables" do

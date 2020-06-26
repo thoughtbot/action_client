@@ -40,7 +40,7 @@ module ActionClient
         body = render(
           template: template.virtual_path,
           variants: variants,
-          locals: locals.with_defaults(
+          locals: locals.with_defaults(request_options).with_defaults(
             arguments: arguments,
             options: request_options
           )
