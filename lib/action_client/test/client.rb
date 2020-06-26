@@ -17,7 +17,7 @@ module ActionClient
         request.client.controller_path
       end
 
-      def process(action_name, *arguments, **options)
+      def process(**options)
         status_code = Rack::Utils.status_code(status)
         template = ActionClient::Template.find(
           request.client,
@@ -28,6 +28,7 @@ module ActionClient
           ]
         )
 
+        arguments = request.client.action_arguments
         request_options = arguments.extract_options!
 
         locals = options.with_defaults(request_options).with_defaults(

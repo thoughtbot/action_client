@@ -33,10 +33,8 @@ module ActionClient
       end
 
       def to_fixture(locals: {}, status: 200, **options)
-        client = request.client
         fixture_client = ActionClient::Test::Client.new(request, status)
-
-        fixture_client.process(client.action_name, *client.action_arguments, **locals)
+        fixture_client.process(locals)
 
         status, headers, body = *fixture_client.response
 
