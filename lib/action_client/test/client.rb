@@ -13,15 +13,18 @@ module ActionClient
         @status = status
       end
 
+      def controller_path
+        request.client.controller_path
+      end
+
       def process(action_name, *arguments, **locals)
-        client = request.client
         status_code = Rack::Utils.status_code(@status)
         variants = [
           status_code,
           Rack::Utils::SYMBOL_TO_STATUS_CODE.invert[status_code]
         ]
 
-        prefixes = Array(client.controller_path)
+        prefixes = Array(controller_path)
         template = lookup_context.find_template(
           action_name,
           prefixes,

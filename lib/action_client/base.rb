@@ -154,12 +154,10 @@ module ActionClient
 
       headers = headers.to_h.with_defaults(defaults.headers.to_h)
 
-      template_path = self.class.controller_path
-      template_name = action_name
-      prefixes = Array(template_path)
+      prefixes = Array(controller_path)
 
-      if lookup_context.any_templates?(template_name, prefixes)
-        template = lookup_context.find_template(template_name, prefixes)
+      if lookup_context.any_templates?(action_name, prefixes)
+        template = lookup_context.find_template(action_name, prefixes)
 
         format = if template.handler.is_a?(ActionView::Template::Handlers::Raw)
           identifier = template.identifier
