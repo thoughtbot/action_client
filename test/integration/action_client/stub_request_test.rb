@@ -188,6 +188,27 @@ module ActionClient
       assert_equal "application/ld+json", response.headers["Content-Type"]
     end
 
+    test "determines fixture Content-Type based on the request's Accept header" do
+      client = declare_client("articles_client") {
+        def all
+          get url: "https://example.com/articles", headers: {"Accept": "application/json"}
+        end
+      }
+      declare_fixture "articles_client/all.json", <<~JS
+        [{ "title": "first!" }]
+      JS
+
+      stub_request(client.all).to_fixture
+      response = client.all.submit
+
+      assert_requested :get, "https://example.com/articles",
+        headers: {"Accept": "application/json"},
+        times: 1
+      assert_equal 200, response.status
+      assert_equal "first!", response.body.dig(0, "title")
+      assert_equal "application/json", response.headers["Content-Type"]
+    end
+
     test "incorporates variants when stubbing a request body with a dynamic fixture" do
       client = declare_client("articles_client") {
         def create(title:)

@@ -35,7 +35,11 @@ module ActionClient
           options: request_options
         )
 
-        content_type = request.content_type.presence || template.content_type
+        content_type = [
+          request.headers["Accept"],
+          request.content_type,
+          template.content_type
+        ].detect(&:present?)
 
         response.status = status_code
         response.headers[Rack::CONTENT_TYPE] = content_type

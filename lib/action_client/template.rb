@@ -38,8 +38,7 @@ module ActionClient
       if template.respond_to?(:format)
         template.format
       elsif handler.is_a?(ActionView::Template::Handlers::Raw)
-        extension = File.extname(identifier)
-        extension.delete_prefix(".")
+        File.extname(identifier).delete_prefix(".")
       else
         formats.first
       end
