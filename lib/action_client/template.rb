@@ -25,13 +25,17 @@ module ActionClient
     end
 
     def render(**options)
-      @renderer.render(template: virtual_path, variants: @variants, **options)
+      body = @renderer.render(
+        template: virtual_path,
+        variants: @variants,
+        **options
+      )
+
+      CGI.unescapeHTML(body.to_s.strip)
     end
 
     def content_type
-      if handler.is_a?(ActionView::Template::Handlers::Raw)
-        nil
-      elsif (mime_type = Mime[format])
+      if (mime_type = Mime[format])
         mime_type.to_s
       end
     end
@@ -39,6 +43,9 @@ module ActionClient
     def format
       if @template.respond_to?(:format)
         @template.format
+      elsif handler.is_a?(ActionView::Template::Handlers::Raw)
+        extension = File.extname(identifier)
+        extension.delete_prefix(".")
       else
         formats.first
       end

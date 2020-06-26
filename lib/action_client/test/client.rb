@@ -35,13 +35,11 @@ module ActionClient
           options: request_options
         )
 
-        body = template.render(locals: locals)
-
         content_type = request.content_type.presence || template.content_type
 
         response.status = Rack::Utils.status_code(@status)
         response.headers[Rack::CONTENT_TYPE] = content_type
-        response.body = CGI.unescapeHTML(body.to_s.strip)
+        response.body = template.render(locals: locals)
 
         self
       end

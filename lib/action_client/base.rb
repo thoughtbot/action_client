@@ -154,35 +154,18 @@ module ActionClient
 
       headers = headers.to_h.with_defaults(defaults.headers.to_h)
 
-      template = ActionClient::Template.find(self)
-
-      if template.present?
-        format = if template.handler.is_a?(ActionView::Template::Handlers::Raw)
-          identifier = template.identifier
-          extension = File.extname(identifier)
-          extension.delete_prefix(".")
-        elsif template.respond_to?(:format)
-          template.format
-        else
-          template.formats.first
-        end
-
-        mime_type = Mime[format]
-        if mime_type.present?
-          content_type = mime_type.to_s
-        end
-        body = template.render(options)
+      if (template = ActionClient::Template.find(self))
+        content_type = template.content_type
+        payload = template.render(options)
       else
         content_type = headers[Rack::CONTENT_TYPE]
-        body = ""
+        payload = ""
       end
 
       file_extension = File.extname(uri.path).delete_prefix(".")
       accept = Mime[file_extension].to_s
 
       query_parameters = Rack::Utils.parse_query(uri.query).merge(query)
-
-      payload = CGI.unescapeHTML(body.to_s.strip)
 
       request = ActionDispatch::Request.new(
         Rack::HTTP_HOST => "#{uri.hostname}:#{uri.port}",
