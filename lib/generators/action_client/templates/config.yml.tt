@@ -1,0 +1,11 @@
+default: &default
+  url: "https://example.com/<%= file_name %>"
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

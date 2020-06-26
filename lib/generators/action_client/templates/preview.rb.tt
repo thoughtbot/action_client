@@ -1,0 +1,8 @@
+class <%= class_name %>ClientPreview < ActionClient::Preview
+<% actions.each do |action| -%>
+  def <%= action %>
+    <%= class_name %>Client.<%= action %>
+  end
+<%= "\n" unless action == actions.last -%>
+<% end -%>
+end
