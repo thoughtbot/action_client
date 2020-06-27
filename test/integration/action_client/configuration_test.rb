@@ -57,5 +57,27 @@ module ActionClient
 
       assert_equal "https://example.com/articles", request.url
     end
+
+    test "declares defaults from configuration when inherited" do
+      declare_config "clients/articles.yml", <<~YAML
+        test:
+          headers:
+            X-Special-Key: "abc123"
+          url: "https://example.com"
+      YAML
+      declare_client("ApplicationClient", inherits: ActionClient::Base)
+      class ::ArticlesClient < ApplicationClient
+        def all
+          get path: "articles"
+        end
+      end
+
+      request = ArticlesClient.all
+
+      assert_equal "https://example.com/articles", request.url
+      assert_equal "abc123", request.headers["X-Special-Key"]
+    ensure
+      Object.send :remove_const, "ArticlesClient"
+    end
   end
 end

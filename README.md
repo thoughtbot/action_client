@@ -313,10 +313,10 @@ Default values can be overridden on a request-by-request basis.
 When a default `url:` key is specified, a request's full URL will be built by
 joining the base `default url: ...` value with the request's `path:` option.
 
-In this example, `ArticlesClient.configuration` will read directly from the
-environment-aware `config/clients/articles.yml` file.
+### Configuring your clients in YAML
 
-Consider the following configuration:
+Consider the following configuration file declared at
+`config/clients/articles.yml`:
 
 ```yaml
 # config/clients/articles.yml
@@ -334,13 +334,19 @@ production:
   url: "https://example.com"
 ```
 
-Then from the client class, read those values directly from `configuration`:
+In this example, the `ArticlesClient.configuration` will read directly from the
+environment-aware `config/clients/articles.yml` file.
+
+The client class can access those values directly from `.configuration`:
 
 ```ruby
 class ArticlesClient < ActionClient::Base
   default url: configuration.url
 end
 ```
+
+If there are `url:` or `headers:` declarations in the configuration file, they
+will implicitly be forwarded as arguments to `default`.
 
 When a matching configuration file does not exist,
 `ActionClient::Base.configuration` returns an empty instance of

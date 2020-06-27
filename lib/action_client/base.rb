@@ -27,7 +27,7 @@ module ActionClient
 
     class << self
       def inherited(descendant)
-        descendant.defaults = defaults.dup
+        descendant.defaults = defaults.with_defaults(descendant.configuration)
         descendant.middleware = middleware.dup
       end
 
@@ -99,7 +99,7 @@ module ActionClient
       end
 
       def client_name
-        controller_path.gsub("_client", "")
+        controller_path.to_s.delete_suffix("_client")
       end
 
       def respond_to?(method, *arguments)
@@ -127,6 +127,10 @@ module ActionClient
     def process(action_name, *arguments)
       @action_arguments = arguments
       super
+    end
+
+    def configuration
+      self.class.configuration
     end
 
     def id
