@@ -49,7 +49,7 @@ module ActionClient
     end
 
     test "constructs a POST request with a JSON body declared with instance variables" do
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         default url: "https://example.com"
 
         def create(article:)
@@ -157,7 +157,7 @@ module ActionClient
     end
 
     test "constructs a DELETE request with a JSON body template" do
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         default url: "https://example.com"
 
         def destroy(article:)
@@ -178,7 +178,7 @@ module ActionClient
     end
 
     test "constructs a PUT request with a JSON body declared with locals" do
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         default url: "https://example.com"
 
         def update(article:)
@@ -201,7 +201,7 @@ module ActionClient
     end
 
     test "constructs a PATCH request with an XML body declared with locals" do
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         default url: "https://example.com"
 
         def update(article:)
@@ -224,7 +224,7 @@ module ActionClient
     end
 
     test "constructs a request with a body wrapped by a layout" do
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         def create(article:)
           post \
             layout: "article_client",
@@ -249,7 +249,7 @@ module ActionClient
     end
 
     test "construacts a JSON request body from a raw template" do
-      client = declare_client("status_client") {
+      client = declare_client("StatusClient") {
         default url: "https://example.com"
 
         def ping
@@ -459,7 +459,7 @@ module ActionClient
     end
 
     test "#submit makes an appropriate HTTP request" do
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         default url: "https://example.com"
 
         def create(article:)
@@ -487,7 +487,7 @@ module ActionClient
     end
 
     test "#submit parses a JSON response based on the `Content-Type`" do
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         default url: "https://example.com"
 
         def create(article:)
@@ -513,7 +513,7 @@ module ActionClient
 
     test "#submit parses a JSON-LD response based on the `Content-Type`" do
       title = "Article title"
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         default url: "https://example.com"
 
         def create(title:)
@@ -538,7 +538,7 @@ module ActionClient
     end
 
     test "#submit parses an XML response based on the `Content-Type`" do
-      client = declare_client("article_client") {
+      client = declare_client("ArticleClient") {
         default url: "https://example.com"
 
         def create(article:)

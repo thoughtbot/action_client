@@ -4,12 +4,6 @@ require "active_job_test_case"
 module ActionClient
   class ActiveJobAssertionsTestCase < ActiveJobTestCase
     include ActionClient::TestHelpers
-    MetricsClient = Class.new(ActionClient::Base) {
-      def ping(name, **query)
-        get url: "https://example.com/ping?name=#{name}", query: query
-      end
-    }
-    MetricsClientJob = Class.new(ActionClient::SubmissionJob)
 
     def self.test(*arguments, rails: 5.2, &block)
       if Gem::Version.new(rails.to_s) <= Rails.gem_version
@@ -26,7 +20,12 @@ module ActionClient
 
   class AssertRequestEnqueuedTest < ActiveJobAssertionsTestCase
     test "#assert_enqueued_request accepts a request", rails: 6.0 do
-      request = MetricsClient.ping("status", x: 1)
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status", x: 1)
 
       request.submit_later
 
@@ -34,13 +33,23 @@ module ActionClient
     end
 
     test "#assert_enqueued_request accepts a block" do
-      request = MetricsClient.ping("status", x: 1)
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status", x: 1)
 
       assert_enqueued_request(request) { request.submit_later }
     end
 
     test "#assert_enqueued_request accepts a options" do
-      request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping
+          get url: "https://example.com/ping"
+        end
+      }
+      request = client.ping
 
       assert_enqueued_request(request, queue: "low_priority") do
         request.submit_later(queue: "low_priority")
@@ -48,7 +57,12 @@ module ActionClient
     end
 
     test "#assert_enqueued_request raises with a request", rails: 6.0 do
-      request = MetricsClient.ping("status", x: 1)
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status", x: 1)
 
       assert_raises ActiveSupport::TestCase::Assertion do
         assert_enqueued_request(request)
@@ -56,7 +70,12 @@ module ActionClient
     end
 
     test "#assert_enqueued_request raises from a block" do
-      request = MetricsClient.ping("status", x: 1)
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status", x: 1)
 
       assert_raises ActiveSupport::TestCase::Assertion do
         assert_enqueued_request(request) {}
@@ -74,7 +93,12 @@ module ActionClient
     end
 
     test "#assert_no_requests_enqueued accepts a options", rails: 6.0 do
-      request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status")
 
       assert_no_requests_enqueued(queue: "low_priority") do
         request.submit_later(queue: "default")
@@ -82,19 +106,30 @@ module ActionClient
     end
 
     test "#assert_no_requests_enqueued does not raise for the argument" do
-      with_submission_job MetricsClient, MetricsClientJob do
-        request = MetricsClient.ping("status")
+      job = declare_job
+      client = declare_client {
+        self.submission_job = job
 
-        request.submit_later
-
-        assert_raises ActiveSupport::TestCase::Assertion do
-          assert_no_requests_enqueued(MetricsClient)
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
         end
+      }
+      request = client.ping("status")
+
+      request.submit_later
+
+      assert_raises ActiveSupport::TestCase::Assertion do
+        assert_no_requests_enqueued(client)
       end
     end
 
     test "#assert_no_requests_enqueued raises without a block" do
-      request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status")
 
       request.submit_later
 
@@ -104,7 +139,12 @@ module ActionClient
     end
 
     test "#assert_no_requests_enqueued raises from a block" do
-      request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status")
 
       assert_raises ActiveSupport::TestCase::Assertion do
         assert_no_requests_enqueued { request.submit_later }
@@ -115,36 +155,53 @@ module ActionClient
   class AssertRequestPerformedTest < ActiveJobAssertionsTestCase
     test "#assert_performed_request accepts a request", rails: 6.0 do
       ignore_http_requests!
-      perform_enqueued_jobs do
-        request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status")
 
-        request.submit_later
+      perform_enqueued_jobs { request.submit_later }
 
-        assert_performed_request request
-      end
+      assert_performed_request request
     end
 
     test "#assert_performed_request accepts a block" do
       ignore_http_requests!
-      request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status")
 
       assert_performed_request(request) { request.submit_later }
     end
 
     test "#assert_performed_request accepts options", rails: 6.0 do
       ignore_http_requests!
-      perform_enqueued_jobs do
-        request = MetricsClient.ping("status")
-        request.submit_later(queue: "low_priority")
+      client = declare_client {
+        def ping(name, **query)
+          get url: "https://example.com/ping?name=#{name}", query: query
+        end
+      }
+      request = client.ping("status")
 
-        assert_performed_request(request, queue: "low_priority")
-      end
+      perform_enqueued_jobs { request.submit_later(queue: "low_priority") }
+
+      assert_performed_request(request, queue: "low_priority")
     end
 
     test "#assert_enqueued_request raises with a request", rails: 6.0 do
-      perform_enqueued_jobs do
-        request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping
+          get url: "https://example.com/ping"
+        end
+      }
+      request = client.ping
 
+      perform_enqueued_jobs do
         assert_raises ActiveSupport::TestCase::Assertion do
           assert_performed_request(request)
         end
@@ -152,7 +209,12 @@ module ActionClient
     end
 
     test "#assert_enqueued_request raises with a block" do
-      request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping
+          get url: "https://example.com/ping"
+        end
+      }
+      request = client.ping
 
       assert_raises ActiveSupport::TestCase::Assertion do
         assert_performed_request(request) {}
@@ -161,9 +223,14 @@ module ActionClient
 
     test "#assert_enqueued_request raises with options", rails: 6.0 do
       ignore_http_requests!
-      perform_enqueued_jobs do
-        request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping
+          get url: "https://example.com/ping"
+        end
+      }
+      request = client.ping
 
+      perform_enqueued_jobs do
         request.submit_later(queue: "default")
 
         exception = assert_raises(ActiveSupport::TestCase::Assertion) {
@@ -188,7 +255,12 @@ module ActionClient
     end
 
     test "#assert_no_performed_requests accepts a options", rails: 6.0 do
-      request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping
+          get url: "https://example.com/ping"
+        end
+      }
+      request = client.ping
 
       assert_no_performed_requests(queue: "low_priority") do
         request.submit_later(queue: "default")
@@ -197,20 +269,31 @@ module ActionClient
 
     test "#assert_no_performed_requests does not raise for the argument class" do
       ignore_http_requests!
-      with_submission_job MetricsClient, MetricsClientJob do
-        request = MetricsClient.ping("status")
+      job = declare_job
+      client = declare_client {
+        self.submission_job = job
 
-        perform_enqueued_jobs { request.submit_later }
-
-        assert_raises ActiveSupport::TestCase::Assertion do
-          assert_no_performed_requests(MetricsClient)
+        def ping
+          get url: "https://example.com/ping"
         end
+      }
+      request = client.ping
+
+      perform_enqueued_jobs { request.submit_later }
+
+      assert_raises ActiveSupport::TestCase::Assertion do
+        assert_no_performed_requests(client)
       end
     end
 
     test "#assert_no_performed_requests raises without a block" do
       ignore_http_requests!
-      request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping
+          get url: "https://example.com/ping"
+        end
+      }
+      request = client.ping
 
       perform_enqueued_jobs { request.submit_later }
 
@@ -221,9 +304,14 @@ module ActionClient
 
     test "#assert_no_performed_requests raises from a block" do
       ignore_http_requests!
-      perform_enqueued_jobs do
-        request = MetricsClient.ping("status")
+      client = declare_client {
+        def ping
+          get url: "https://example.com/ping"
+        end
+      }
+      request = client.ping
 
+      perform_enqueued_jobs do
         assert_raises ActiveSupport::TestCase::Assertion do
           assert_no_performed_requests { request.submit_later }
         end

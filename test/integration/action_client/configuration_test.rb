@@ -4,13 +4,13 @@ require "integration_test_case"
 module ActionClient
   class ConfigurationTestCase < ActionClient::IntegrationTestCase
     test "default headers will cascade down the inheritance hierarchy" do
-      application_client = declare_client("application_client") {
+      declare_client "ApplicationClient" do
         default headers: {
           "X-Special": "abc123",
           "Content-Type": "text/plain"
         }
-      }
-      client = declare_client(inherits: application_client) {
+      end
+      client = declare_client(inherits: ApplicationClient) {
         default headers: {
           "Content-Type": "application/json"
         }
@@ -31,7 +31,7 @@ module ActionClient
         test:
           url: "https://example.com"
       YAML
-      client = declare_client("articles_client") {
+      client = declare_client("ArticlesClient") {
         default url: configuration.url
 
         def all
@@ -45,7 +45,7 @@ module ActionClient
     end
 
     test "defaults to an empty configuration when a file is not present" do
-      client = declare_client("articles_client") {
+      client = declare_client("ArticlesClient") {
         default url: configuration.url || "https://example.com"
 
         def all
