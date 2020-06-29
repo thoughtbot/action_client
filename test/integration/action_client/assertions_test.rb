@@ -6,7 +6,7 @@ module ActionClient
     include ActionClient::TestHelpers
 
     test "integrates with Webmock's assert_requested methods" do
-      client = declare_client("articles_client") {
+      client = declare_client {
         def all
           get url: "https://example.com/articles"
         end
@@ -19,7 +19,7 @@ module ActionClient
     end
 
     test "integrates with Webmock's assert_not_requested methods" do
-      client = declare_client("articles_client") {
+      client = declare_client {
         def all
           get url: "https://example.com/articles"
         end
@@ -37,7 +37,7 @@ module ActionClient
     end
 
     test "falls back to Webmock's assert_requested methods" do
-      client = declare_client("articles_client") {
+      client = declare_client {
         def all
           get url: "https://example.com/articles"
         end
@@ -50,7 +50,7 @@ module ActionClient
     end
 
     test "falls back to Webmock's assert_not_requested methods" do
-      client = declare_client("articles_client") {
+      client = declare_client {
         def all
           get url: "https://example.com/articles"
         end
