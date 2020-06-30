@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Declare `ActionClient::SubmissionJob.retry_on` to proxy to the `ActiveJob`
+  version (added by [@seanpdoyle][])
+
 - Implicitly call `default` with `url:` and `headers:` declarations from a
   client's `config/clients` YAML file (added by [@seanpdoyle][])
 

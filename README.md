@@ -254,6 +254,27 @@ end
 
 Within the block, the Rack triplet is available as `response`.
 
+Similarly, to automatically retry jobs matching a single HTTP Status or a
+collection of HTTP Status Codes, declare a `retry_on` block:
+
+```ruby
+# app/jobs/articles_client_job.rb
+class ArticlesClientJob < ActionClient::SubmissionJob
+  retry_on except_status: 200, queue: "low_priority"
+end
+```
+
+Under the hood, this method declares a [`retry_on` block][retry_on], so you can
+mix and match `except_status:` and `only_status:` options with the other
+arguments `retry_on` accepts:
+
+```ruby
+# app/jobs/articles_client_job.rb
+class ArticlesClientJob < ActionClient::SubmissionJob
+  retry_on Net::OpenTimeout, except_status: 200, queue: "low_priority"
+end
+```
+
 Next, configure your client class to enqueue jobs with that class:
 
 ```ruby
@@ -267,6 +288,7 @@ The `ActionClient::SubmissionJob` provides an extended version of
 option, to serve as a guard clause filter.
 
 [after_perform]: https://api.rubyonrails.org/classes/ActiveJob/Callbacks/ClassMethods.html#method-i-after_perform
+[retry_on]: https://api.rubyonrails.org/classes/ActiveJob/Exceptions/ClassMethods.html#method-i-retry_on
 
 ## Configuration
 
