@@ -254,6 +254,8 @@ end
 
 Within the block, the Rack triplet is available as `response`.
 
+**`retry_on`**
+
 Similarly, to automatically retry jobs matching a single HTTP Status or a
 collection of HTTP Status Codes, declare a `retry_on` block:
 
@@ -275,6 +277,31 @@ class ArticlesClientJob < ActionClient::SubmissionJob
 end
 ```
 
+**`discard_on`**
+
+Similarly, to skip retrying jobs matching a single HTTP Status or a collection
+of HTTP Status Codes, declare a `discard_on` block:
+
+```ruby
+# app/jobs/articles_client_job.rb
+class ArticlesClientJob < ActionClient::SubmissionJob
+  retry_on except_status: 200, queue: "low_priority"
+  discard_on only_status: 422
+end
+```
+
+Under the hood, this method declares a [`discard_on` block][discard_on], so you
+can mix and match `except_status:` and `only_status:` options with the other
+arguments `discard_on` accepts:
+
+```ruby
+# app/jobs/articles_client_job.rb
+class ArticlesClientJob < ActionClient::SubmissionJob
+  retry_on Net::OpenTimeout
+  discard_on Articles::Api::InvalidError, only_status: 422
+end
+```
+
 Next, configure your client class to enqueue jobs with that class:
 
 ```ruby
@@ -289,6 +316,7 @@ option, to serve as a guard clause filter.
 
 [after_perform]: https://api.rubyonrails.org/classes/ActiveJob/Callbacks/ClassMethods.html#method-i-after_perform
 [retry_on]: https://api.rubyonrails.org/classes/ActiveJob/Exceptions/ClassMethods.html#method-i-retry_on
+[discard_on]: https://api.rubyonrails.org/classes/ActiveJob/Exceptions/ClassMethods.html#method-i-discard_on
 
 ## Configuration
 

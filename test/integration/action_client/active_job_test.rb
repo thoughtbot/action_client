@@ -175,6 +175,168 @@ module ActionClient
       end
     end
 
+    class DiscardOnWithStatusOptionsTest < ActiveJobTest
+      test ".discard_on without options always executes" do
+        job = declare_job {
+          retry_on(only_status: 500)
+          discard_on(Timeout::Error)
+        }
+        client = declare_client {
+          self.submission_job = job
+
+          def ping
+            get url: "https://example.com/ping"
+          end
+        }
+        stub_request(:get, "https://example.com/ping")
+          .to_return(status: 500)
+          .then.to_raise(Timeout::Error)
+          .then.to_return(status: 500)
+
+        perform_enqueued_jobs { client.ping.submit_later }
+
+        assert_requested :get, "https://example.com/ping", times: 2
+      end
+
+      test ".discard_on raises when passed both only_status: and except_status:" do
+        exception = assert_raises(ArgumentError) {
+          declare_job {
+            discard_on(only_status: 200, except_status: 200)
+          }
+        }
+
+        assert_includes exception.message, "except_status:"
+        assert_includes exception.message, "only_status:"
+      end
+
+      test ".discard_on accepts both Error arguments and status options" do
+        job = declare_job {
+          retry_on(only_status: 500)
+          discard_on(Timeout::Error, only_status: 422)
+        }
+        client = declare_client {
+          self.submission_job = job
+
+          def ping
+            get url: "https://example.com/ping"
+          end
+        }
+        stub_request(:get, "https://example.com/ping")
+          .to_return(status: 500)
+          .then.to_return(status: 422)
+          .then.to_return(status: 500)
+
+        perform_enqueued_jobs { client.ping.submit_later }
+
+        assert_requested :get, "https://example.com/ping", times: 2
+      end
+
+      test ".discard_on with only_status discards for a matching status" do
+        job = declare_job {
+          discard_on(only_status: 500)
+        }
+        client = declare_client {
+          self.submission_job = job
+
+          def ping
+            get url: "https://example.com/ping"
+          end
+        }
+        stub_request(:get, "https://example.com/ping")
+          .to_return(status: 500)
+          .then.to_return(status: 200)
+
+        perform_enqueued_jobs { client.ping.submit_later }
+
+        assert_requested :get, "https://example.com/ping", times: 1
+      end
+
+      test ".discard_on yields the error to a block" do
+        exception = nil
+        job = declare_job {
+          discard_on(only_status: 500) { |_, e| exception = e }
+        }
+        client = declare_client {
+          self.submission_job = job
+
+          def ping
+            get url: "https://example.com/ping"
+          end
+        }
+        stub_request(:get, "https://example.com/ping").to_return(status: 500)
+
+        perform_enqueued_jobs { client.ping.submit_later }
+
+        if exception.is_a?(Class)
+          assert_equal ActionClient::SubmissionJob::DiscardStatusError, exception
+        else
+          assert_includes exception.message, "500"
+        end
+      end
+
+      test ".discard_on with only_status does not discard when the status does not match" do
+        job = declare_job {
+          retry_on(only_status: 500)
+          discard_on(only_status: 401)
+        }
+        client = declare_client {
+          self.submission_job = job
+
+          def ping
+            get url: "https://example.com/ping"
+          end
+        }
+        stub_request(:get, "https://example.com/ping")
+          .to_return(status: 500)
+          .then.to_return(status: 200)
+
+        perform_enqueued_jobs { client.ping.submit_later }
+
+        assert_requested :get, "https://example.com/ping", times: 2
+      end
+
+      test ".discard_on with except_status discards for a matching status" do
+        job = declare_job {
+          discard_on(except_status: 200)
+        }
+        client = declare_client {
+          self.submission_job = job
+
+          def ping
+            get url: "https://example.com/ping"
+          end
+        }
+        stub_request(:get, "https://example.com/ping")
+          .to_return(status: 500)
+          .then.to_return(status: 200)
+
+        perform_enqueued_jobs { client.ping.submit_later }
+
+        assert_requested :get, "https://example.com/ping", times: 1
+      end
+
+      test ".discard_on with except_status does not retry when a status does not match" do
+        job = declare_job {
+          discard_on(except_status: 200)
+          retry_on(only_status: 422)
+        }
+        client = declare_client {
+          self.submission_job = job
+
+          def ping
+            get url: "https://example.com/ping"
+          end
+        }
+        stub_request(:get, "https://example.com/ping")
+          .to_return(status: 422)
+          .then.to_return(status: 200)
+
+        perform_enqueued_jobs { client.ping.submit_later }
+
+        assert_requested :get, "https://example.com/ping", times: 2
+      end
+    end
+
     class AfterPerformWithoutOptionsTest < ActiveJobTest
       test ".after_perform without options always executes" do
         response = nil
