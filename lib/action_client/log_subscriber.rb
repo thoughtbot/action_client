@@ -4,10 +4,10 @@ module ActionClient
       client = event.payload[:client]
       action_name = event.payload[:action_name]
       request = event.payload[:request]
-      action_name = color("#{client.class}##{action_name}", CYAN, true)
-      http = color("#{request.method} #{request.url}", CYAN, true)
+      action_name = "#{client.class}##{action_name}"
+      http = "#{request.method} #{request.url}"
 
-      info "#{action_name} - #{http} - #{duration(event)}"
+      info "#{action_name} - #{http} #{duration(event)}"
     end
 
     private
